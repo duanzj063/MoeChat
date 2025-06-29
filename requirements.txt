@@ -17,3 +17,7 @@ transformers
 shortuuid
 filetype
 b64
+Pillow
+sortedcontainers
+fastapi
+uvicorn
