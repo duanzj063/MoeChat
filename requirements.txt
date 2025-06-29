@@ -15,3 +15,5 @@ datasets<3
 simplejson
 transformers
 shortuuid
+filetype
+b64

@@ -9,11 +9,7 @@ LLM:
   key: ""
   model: ""
   extra_config:               # 大模型API额外参数，如：temperature: 0.7，温度参数
-    # 豆包1.5pro大模型用参数
-  stream_options: 
-      include_usage: true
-    # thinking: 
-    #   type: disabled
+
 GSV:
   api: ""
   text_lang: zh
@@ -45,6 +41,12 @@ Agent:
   lore_books: true            # 是否启用世界书（知识库），用于给大模型添加知识，如：人物、物品、事件等等，强化ai的能力，也可用于强化角色扮演。
   books_thresholds: 0.5       # 知识库检索阈值。
   scan_depth: 4               # 知识库搜索深度，返回知识的数量，但相似度低于检索阈值的知识不会被返回，所以返回结果数量也可能小于设定的数值。
+
+  mood_system_enabled: true   # 设置为 false 可以完全禁用情绪系统
+  mood_persists: false         # 设置为 true，重启后会读取上次的情绪值；false则每次重置为0
+  mood_functions:
+    positive_impact: "1 + log(3 * pi * x) + 0.8 * sqrt(x)"
+    negative_impact: "(sqrt(pi) * x) / (1 + exp(sqrt(e) * 0.8 * (sqrt(pi) - x))) + sqrt(e)"
   
   # 上下文长度，决定系统会保存多少条上下文，填入0则保存所有上下文。
   context_length: 0
