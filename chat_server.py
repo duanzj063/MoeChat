@@ -191,7 +191,6 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
     ref_audio = ""
     ref_text = ""
     # biao_tmp = biao_dian_3
-    stat = 0
     for line in response.iter_lines():
         if line:
             try:
@@ -215,6 +214,7 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
             # if not tmp_msg:
             #     continue
             ress = ""
+            stat = 0
             for ii in range(len(tmp_msg)):
                 if tmp_msg[ii] in ["(", "（", "["]:
                     stat += 1
@@ -226,7 +226,7 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
                     continue
                 if tmp_msg[ii] not in biao_dian_3:
                     continue
-                if (tmp_msg[ii] in biao_dian_4) and not j2 and len(re.sub(r'[$(（[].*?[]）)]', '', tmp_msg[:ii+1])) <= 10:
+                if (tmp_msg[ii] in biao_dian_4) and j2 == False and len(re.sub(r'[$(（[].*?[]）)]', '', tmp_msg[:ii+1])) <= 10:
                     continue
 
                 # 提取文本中的情绪标签，并设置参考音频
@@ -239,7 +239,7 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
                 ress = jionlp.remove_html_tag(ress)
                 ttt = ress
                 if j2:
-                    # print(f"\n[开始合成首句语音]{time.time() - t_t}")
+                    print(f"\n[开始合成首句语音]{time.time() - t_t}")
                     for i in range(len(ress)):
                         if ress[i] == "\n" or ress[i] == " ":
                             try:
@@ -425,7 +425,7 @@ async def text_llm_tts(params: tts_data, start_time):
                 # audio = str(audio_list[i])
                 # yield str(data)
                 if stat:
-                    # print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
+                    print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
                     stat = False
                 yield f"data: {json.dumps(data)}\n\n"
                 i += 1

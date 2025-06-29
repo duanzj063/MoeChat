@@ -97,7 +97,7 @@ class Agent:
 
         except:
             pass
-        if CConfig.config["Agent"]["start_with"]:
+        if CConfig.config["Agent"]["start_with"] and len(self.msg_data) == 0:
             for i in range(len(CConfig.config["Agent"]["start_with"])):
                 role = "assistant"
                 if i % 2 == 0:
