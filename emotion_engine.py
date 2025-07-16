@@ -29,8 +29,7 @@ class EmotionEngine:
         self.meltdown_start_time = None
         self.TIME_SCALING_FACTOR = agent_config.get("TIME_SCALING_FACTOR", 2.0)
 
-    # 修正1：下面所有的方法都向右缩进，成为 EmotionEngine 的一部分
-    # 修正2：方法内部调用其他方法或属性时，都加上 self.
+
     
     def _f_valence_map(self, valence: float) -> float:
         if valence < 0:
@@ -38,13 +37,13 @@ class EmotionEngine:
         return 0.0
 
     def _update_latent_emotions(self, current_frustration: float, sentiment: str, impact_strength: float, current_valence: float) -> float:
-        # 修正2：通过 self. 来访问类的属性
+        # 通过 self. 来访问类的属性
         beta = self.FRUSTRATION_DECAY_RATE
         gamma = 1.0
         eta = 0.5
         new_frustration = beta * current_frustration
         if sentiment == "negative":
-            # 修正2：通过 self. 来调用自己的其他方法
+            # 通过 self. 来调用自己的其他方法
             v_abs = self._f_valence_map(current_valence)
             mood_bonus = self.MAX_MOOD_AMPLIFICATION_BONUS * (math.exp(v_abs) - 1) / (math.e - 1)
             amplified_impact = impact_strength * (1 + mood_bonus)
@@ -66,7 +65,7 @@ class EmotionEngine:
             if valence > 0.8:
                 return 0.05
             return 0.0
-        # 修正2：通过 self. 来访问类的属性
+        # 过 self. 来访问类的属性
         for lower_bound, upper_bound, pull_strength in self.emotion_profile_matrix:
             if lower_bound == -1.0 and valence <= upper_bound:
                 return pull_strength
@@ -111,11 +110,11 @@ class EmotionEngine:
                 json_match = re.search(r'\{.*\}', llm_content_str, re.DOTALL)
                 
                 if json_match:
-                    # 如果找到了匹配，就提取出那部分干净的JSON字符串
+                    # 取出净的JSON字符串
                     cleaned_json_str = json_match.group(0)
                     print(f"清洗后的JSON字符串: >>>{cleaned_json_str}<<<")
                 else:
-                    # 如果连花括号都找不到，说明返回的内容完全不对
+                    # 如果无花括号都找不到，报错
                     print("[情绪引擎] 警告: 在LLM的返回中未找到有效的JSON结构。")
                     return self.valence, self.arousal, "neutral", 0.0
                 # ⬆️ ================================================= ⬆️
@@ -127,7 +126,7 @@ class EmotionEngine:
                     print("[情绪引擎] 警告: 清洗后的字符串依然不是有效的JSON，本轮情绪无变化。")
                     return self.valence, self.arousal, "neutral", 0.0
 
-                # ... (后续的情绪计算逻辑保持不变) ...
+                
                 sentiment = analysis.get("sentiment", "neutral")
                 intensity = float(analysis.get("intensity", 0.0))
                 arousal_impact = float(analysis.get("arousal_impact", 0.0))
@@ -153,12 +152,12 @@ class EmotionEngine:
 
                 return final_valence, final_arousal, sentiment, impact_strength
             else:
-                # ... (处理API请求失败的代码不变) ...
+                
                 print(f"[情绪系统] API请求失败，状态码: {response.status_code}")
                 print(f"[情绪系统] API原始返回: {response.text}")
                 return self.valence, self.arousal, "neutral", 0.0
         except Exception as e:
-            # ... (处理其他异常的代码不变) ...
+            
             print(f"[情绪系统] 情绪状态更新过程中发生错误: {e}")
             return self.valence, self.arousal, "neutral", 0.0
 
