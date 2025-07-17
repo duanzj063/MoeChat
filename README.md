@@ -1,11 +1,35 @@
+
+
+<div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="screen/banner.png" alt="banner" style="zoom:50%;" /></a></div>
+
+
+
+<p align="center">
+  <a href="https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333">
+    <img src="https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square" />
+  </a>
+    <a href="https://qm.qq.com/cgi-bin/qm/qr?点击链接加入群聊【MoeChat（假）】：https://qm.qq.com/q/A6GqC7B6us">
+    <img src="https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square" />
+  </a>
+</p>
+
 # 基于GPT-SoVITS的语音交互系统
+
+
 
 ## 简介
 
-一个非常基础的语音交互系统，使用GPT-SoVITS作为TTS模块。集成ASR接口，使用funasr作为语音识别模块基础。支持openai规范的大模型接口。
-Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟在2.1s左右。还有全站最快、最精准的长期记忆查询，可根据如“昨天”、“上周”这样的模糊的时间范围精确查询记忆，在11800h CPU的笔记本上测试，查询总耗时仅为80ms左右。
+一个强大的语音交互系统，用语音和AI角色自然对话、沉浸扮演。
 
-### 测试平台
+## 特点
+
+- 本项目使用GPT-SoVITS作为TTS模块。
+- 集成ASR接口，使用funasr作为语音识别模块基础。
+- Moechat支持所有openai规范的大模型接口。
+- Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟在2.1s左右。
+- Moechat项目拥有全站最快、最精准的长期记忆查询，可根据如“昨天”、“上周”这样的模糊的时间范围精确查询记忆，在11800h CPU的笔记本上测试，查询总耗时仅为80ms左右。
+
+## 测试平台
 
 服务端
 
@@ -17,24 +41,40 @@ Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟�
 
 - 树莓派5
 
-### 测试结果
+## 测试结果
 
 ![](screen/img.png)
 
 ## 更新日志
-### 2025.05.13
-- 修复一些bug
-- 新增功能：声纹识别、更具情绪标签选择指定参考音频
+### 2025.06.29
+
+- 设计了全新的情绪系统。
+
+- 为Moechat添加了简易的web端，可以识别关键词进行表情飘屏，和其他例子特效。
+
+  <div style="text-align: left;"><img src="screen/sample1.png" alt="sample1" style="zoom: 55%;" /></div>
+
 ### 2025.06.11
-- 增加角色模板功能：可以使用内置提示词模板创建角色
-- 增加日记系统（长期记忆：使ai可以记住所有的聊天内容，并且可以使用像”昨天聊了什么“、”上周去了哪里“和”今天中午吃了什么“这样的语句进行基于时间范围的精确查询，不会像传统向量数据库那样因为时间维度而丢失记忆
-- 增加核心记忆功能：使ai可以记住关于用户的重要回忆、信息和个人喜好
-- 上述功均需要启用角色模板功能
+- 增加角色模板功能：可以使用内置提示词模板创建角色。
+
+- 增加日记系统（长期记忆：AI可以记住所有的聊天内容，并且可以使用像”昨天聊了什么“、”上周去了哪里“和”今天中午吃了什么“这样的语句进行基于时间范围的精确查询，不会像传统向量数据库那样因为时间维度而丢失记忆。
+
+- 增加核心记忆功能：AI可以记住关于用户的重要回忆、信息和个人喜好。
+
+  上述功均需要启用角色模板功能
+
 - 脱离原有的GPT-SoVITS代码，改为API接口调用
 
+### 2025.05.13
+
+- 新增声纹识别
+- 新增了根据情绪标签选择指定参考音频。
+- 修复了一些bug。
+
 # 整合包使用说明
-[百度网盘](https://pan.baidu.com/s/1mf6hHJt8hVW3G2Yp2gC3Sw?pwd=2333)
-其他下载方式可进群获取：967981851
+网盘下载链接：[![BaiduPan](https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
+
+其他下载方式可进群获取：![QQ](https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square)
 
 ### Windows
 
