@@ -21,3 +21,4 @@ Pillow
 sortedcontainers
 fastapi
 uvicorn
+rich

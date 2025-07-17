@@ -12,7 +12,14 @@
 # 上述功均需要启用角色模板功能
 # 脱离原有的GPT-SoVITS代码，改为API接口调用
 
-
+# 2025.07.17
+# 修复若干bug
+# 新增websocket在线vad+asr接口
+# 新增chat_v2接口
+# 新增获取聊天记录接口
+# 新增获取服务器配置接口
+# 新增更新服务器配置接口
+# 新增运行时重载配置功能
 
 
 # 读取配置文件
@@ -54,26 +61,25 @@
 #     for c in extra_config:
 #         req_data[c] = extra_config[c]
 
-print(2333333333333333333)
-
 import os
 import sys
+# import io
 now_dir = os.getcwd()
 sys.path.append(now_dir)
+sys.path.append("%s/vad_utils" % (now_dir))
 from utilss import config as CConfig
 import requests
 import json
 import time
 import asyncio
-from threading import Thread
+from threading import Thread, Event
 
 
 # 创建数据文件夹
 os.path.exists("data") or os.mkdir("data")
 
 import base64
-# import numpy as np
-# import soundfile as sf
+import soundfile as sf
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import StreamingResponse, JSONResponse
 import uvicorn
@@ -90,7 +96,10 @@ from utilss.agent import Agent
 import re
 # import unicodedata
 import jionlp
-# from pysilero import VADIterator
+from pysilero import VADIterator
+from scipy.signal import resample
+import scipy.io.wavfile as wavfile
+
 
 # t2s_weights = config_data["GSV"]["GPT_weight"]
 # vits_weights =  config_data["GSV"]["SoVITS_weight"]
@@ -149,7 +158,11 @@ else:
     is_sv = False
 
 # 提交到大模型
-def to_llm(msg: list, res_msg_list: list, full_msg: list):
+def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, event: Event):
+    # 获取多线程锁
+    if CConfig.config["Agent"]["is_up"]:
+        agent.lock.acquire()
+
     def get_emotion(msg: str):
         res = re.findall(r'\[(.*?)\]', msg)
         if len(res) > 0:
@@ -192,6 +205,8 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
     ref_text = ""
     # biao_tmp = biao_dian_3
     for line in response.iter_lines():
+        if event.is_set():
+            break
         if line:
             try:
                 if j:
@@ -203,6 +218,7 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
                     data_str = decoded_line[5:].strip()
                     if data_str:
                         msg_t = json.loads(data_str)["choices"][0]["delta"]["content"]
+                        tmp_msg_list[0] += msg_t
                         res_msg += msg_t
                         tmp_msg += msg_t
                 res_msg = res_msg.replace("...", "…")
@@ -285,6 +301,12 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
     print(full_msg)
     # print(res_msg_list)
     res_msg_list.append("DONE_DONE")
+    if CConfig.config["Agent"]["is_up"] and len(full_msg[0]) != 0:    # 刷新智能体上下文内容
+        agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
+
+    # 释放多线程锁
+    if CConfig.config["Agent"]["is_up"]:
+        agent.lock.release()
 
 def tts(datas: dict):
     res = requests.post(CConfig.config["GSV"]["api"], json=datas, timeout=10)
@@ -334,14 +356,17 @@ def to_tts(tts_data: list):
         datas["prompt_text"] = ref_text
     try:
         byte_data = tts(datas)
-        audio_b64 = base64.urlsafe_b64encode(byte_data).decode("utf-8")
-        return audio_b64
+        # audio_b64 = base64.urlsafe_b64encode(byte_data).decode("utf-8")
+        # return audio_b64
+        return byte_data
     except:
         return "None"
 
-def ttts(res_list: list, audio_list: list):
+def ttts(res_list: list, audio_list: list, event: Event):
     i = 0
     while True:
+        if event.is_set():
+            break
         if i < len(res_list):
             if res_list[i] == "DONE_DONE":
                 audio_list.append("DONE_DONE")
@@ -393,47 +418,143 @@ app = FastAPI()
 class tts_data(BaseModel):
     msg: list
 
+# 聊天接口
 async def text_llm_tts(params: tts_data, start_time):
-        # print(params)
-        res_list = []
-        audio_list = []
-        full_msg = []
-        if CConfig.config["Agent"]["is_up"]:
-            global agent
-            t = time.time()
-            msg_list = agent.get_msg_data(params.msg[-1]["content"])
-            print(f"[提示]获取上下文耗时：{time.time() - t}")
-        else:
-            msg_list = params.msg
-        llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, ))
-        llm_t.daemon = True
-        llm_t.start()
-        tts_t = Thread(target=ttts, args=(res_list, audio_list, ))
-        tts_t.daemon = True
-        tts_t.start()
+    # print(params)
+    res_list = []
+    audio_list = []
+    full_msg = []
+    if CConfig.config["Agent"]["is_up"]:
+        global agent
+        t = time.time()
+        msg_list = agent.get_msg_data(params.msg[-1]["content"])
+        print(f"[提示]获取上下文耗时：{time.time() - t}")
+    else:
+        msg_list = params.msg
+    llm_stop = Event()
+    llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, llm_stop, ))
+    llm_t.daemon = True
+    llm_t.start()
+    tts_stop = Event()
+    tts_t = Thread(target=ttts, args=(res_list, audio_list, tts_stop, ))
+    tts_t.daemon = True
+    tts_t.start()
 
-        i = 0
-        stat = True
-        while True:
-            if i < len(audio_list):
-                if audio_list[i] == "DONE_DONE":
-                    data = {"file": None, "message": full_msg[0], "done": True}
-                    if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
-                        agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
-                    yield f"data: {json.dumps(data)}\n\n"
-                data = {"file": audio_list[i], "message": res_list[i][2], "done": False}
-                # audio = str(audio_list[i])
-                # yield str(data)
-                if stat:
-                    print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
-                    stat = False
+    i = 0
+    stat = True
+    while True:
+        if i < len(audio_list):
+            if audio_list[i] == None:
+                continue
+            if audio_list[i] == "DONE_DONE":
+                data = {"file": None, "message": full_msg[0], "done": True}
+                # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
+                #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
                 yield f"data: {json.dumps(data)}\n\n"
-                i += 1
-            await asyncio.sleep(0.05)
+            audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
+            data = {"file": audio_b64, "message": res_list[i][2], "done": False}
+            # audio = str(audio_list[i])
+            # yield str(data)
+            if stat:
+                print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
+                stat = False
+            yield f"data: {json.dumps(data)}\n\n"
+            i += 1
+        await asyncio.sleep(0.05)
 
 @app.post("/api/chat")
 async def tts_api(params: tts_data):
     return StreamingResponse(text_llm_tts(params, time.time()), media_type="text/event-stream")
+
+
+# 聊天接口v2
+async def text_llm_tts2(params: tts_data, start_time):
+    # print(params)
+    tmp_msg_list = [""]
+    tmp_msg_list_len = len(tmp_msg_list[0])
+    res_list = []
+    audio_list = []
+    full_msg = []
+    if CConfig.config["Agent"]["is_up"]:
+        global agent
+        t = time.time()
+        msg_list = agent.get_msg_data(params.msg[-1]["content"])
+        print(f"[提示]获取上下文耗时：{time.time() - t}")
+    else:
+        msg_list = params.msg
+    llm_stop = Event()
+    llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, tmp_msg_list, llm_stop, ))
+    llm_t.daemon = True
+    llm_t.start()
+    tts_stop = Event()
+    tts_t = Thread(target=ttts, args=(res_list, audio_list, tts_stop, ))
+    tts_t.daemon = True
+    tts_t.start()
+    tts_t.join
+
+    i = 0
+    stat = True
+    while True:
+        if i < len(audio_list):
+            if audio_list[i] == "DONE_DONE":
+                break
+        ll = len(tmp_msg_list[0])
+        if ll > tmp_msg_list_len:
+            t_data = {"type": "text", "data": tmp_msg_list[0][tmp_msg_list_len:], "done": False}
+            try:
+                yield f"data: {json.dumps(t_data)}\n\n"
+            except:
+                llm_stop.set()
+                tts_stop.set()
+                break
+            tmp_msg_list_len = ll
+        if i < len(audio_list):
+            # if audio_list[i] == "DONE_DONE":
+            #     data = {"type": "text", "data": full_msg[0], "done": True}
+            #     # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
+            #     #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
+            #     try:
+            #         yield f"data: {json.dumps(data)}\n\n"
+            #     except:
+            #         llm_stop.set()
+            #         tts_stop.set()
+            #         break
+            if audio_list[i] == None:
+                continue
+            audio_bytes = BytesIO(audio_list[i])
+            sampling_rate, data = wavfile.read(audio_bytes)
+            # 计算时长（以秒为单位）
+            duration_seconds = data.shape[0] / float(sampling_rate)
+            # 将时长转换为毫秒
+            duration_milliseconds = duration_seconds * 1000
+
+            audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
+            data = {"type": "audio", "data": audio_b64, "len": int(duration_milliseconds), "done": False}
+            # audio = str(audio_list[i])
+            # yield str(data)
+            if stat:
+                print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
+                stat = False
+            try:
+                yield f"data: {json.dumps(data)}\n\n"
+            except:
+                llm_stop.set()
+                tts_stop.set()
+                break
+            i += 1
+        await asyncio.sleep(0.05)
+    data = {"type": "text", "data": full_msg[0], "done": True}
+    # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
+    #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
+    try:
+        yield f"data: {json.dumps(data)}\n\n"
+    except:
+        llm_stop.set()
+        tts_stop.set()
+@app.post("/api/chat_v2")
+async def tts_api(params: tts_data):
+    return StreamingResponse(text_llm_tts2(params, time.time()), media_type="text/event-stream")
+
 
 # asr接口
 class asr_data(BaseModel):
@@ -445,51 +566,86 @@ async def asr_api(params: asr_data):
     return text
 
 # vad接口
-# @app.websocket("/api/ws")
-# async def websocket_endpoint(websocket: WebSocket):
-#     await websocket.accept()
-#     # state = np.zeros((2, 1, 128), dtype=np.float32)
-#     # sr = np.array(16000, dtype=np.int64)
-#     # 初始化 VAD 迭代器，指定采样率为 16000Hz
-#     vad_iterator = VADIterator(speech_pad_ms=90)
-#     while True:
-#         try:
-#             data = await websocket.receive_text()
-#             data = json.loads(data)
-#             if data["type"] == "asr":
-#                 audio_data = base64.urlsafe_b64decode(str(data["data"]).encode("utf-8"))
-#                 samples = np.frombuffer(audio_data, dtype=np.float32)
-#                 # samples = nr.reduce_noise(y=samples, sr=16000)
-#                 # samples = np.expand_dims(samples, axis=0)
-#                 # ort_inputs = {"input": samples, "state": state, "sr": sr}
-#                 # # 进行 VAD 预测
-#                 # vad_prob = session.run(None, ort_inputs)[0]
-#                 # # 判断是否为语音
-#                 # if vad_prob > 0.7:
-#                 #     print(f"[{time.time()}]说话中...")
-#                 #     await websocket.send_text("说话中...")
-#                 # 将重采样后的数据传递给 VAD 处理
-#                 for speech_dict, speech_samples in vad_iterator(samples):
-#                     if "start" in speech_dict:
-#                         # current_speech = []
-#                         print("开始说话...")
-#                         websocket.send_text("开始说话...")
-#                         pass
-#                     # if status:
-#                     #     current_speech.append(speech_samples)
-#                     # else:
-#                     #     continue
-#                     is_last = "end" in speech_dict
-#                     if is_last:
-#                         # t = Thread(target=gen_audio, args=(current_speech.copy(), ))
-#                         # t.daemon = True
-#                         # t.start()
-#                         websocket.send_text("结束说话")
-#                         print("结束说话")
-#                         # current_speech = []  # 清空当前段落
+@app.websocket("/api/asr_ws")
+async def websocket_endpoint(c_websocket: WebSocket):
+    await c_websocket.accept()
+    # state = np.zeros((2, 1, 128), dtype=np.float32)
+    # sr = np.array(16000, dtype=np.int64)
+    # 初始化 VAD 迭代器，指定采样率为 16000Hz
+    vad_iterator = VADIterator(speech_pad_ms=270)
+    current_speech = []
+    current_speech_tmp = []
+    status = False
+    while True:
+        try:
+            data = await c_websocket.receive_text()
+            data = json.loads(data)
+            if data["type"] == "asr":
+                audio_data = base64.urlsafe_b64decode(str(data["data"]).encode("utf-8"))
+                samples = np.frombuffer(audio_data, dtype=np.float32)
+                current_speech_tmp.append(samples)
+                if len(current_speech_tmp) < 9:
+                    continue
+                resampled = np.concatenate(current_speech_tmp.copy())
+                current_speech_tmp = []
+                # resampled = resample(samples, 1600)
+                resampled = resample(resampled, 1600)
+                resampled = resampled.astype(np.float32)
 
-#         except:
-#             break
+                for speech_dict, speech_samples in vad_iterator(resampled):
+                    if "start" in speech_dict:
+                        current_speech = []
+                        status = True
+                        pass
+                    if status:
+                        current_speech.append(speech_samples)
+                    else:
+                        continue
+                    is_last = "end" in speech_dict
+                    if is_last:
+                        status = False
+                        combined = np.concatenate(current_speech)
+                        audio_bytes = b""
+                        with BytesIO() as buffer:
+                            sf.write(
+                                buffer,
+                                combined,
+                                16000,
+                                format="WAV",
+                                subtype="PCM_16",
+                            )
+                            buffer.seek(0)
+                            audio_bytes = buffer.read()  # 完整的 WAV bytes
+                            res_text = asr(audio_bytes)
+                            if res_text:
+                                await c_websocket.send_text(res_text)
+                            else:
+                                await c_websocket.send_text("None")
+                        current_speech = []  # 清空当前段落
+
+        except:
+            break
+
+# 客户端获取聊天记录
+@app.post("/api/get_context")
+async def get_context():
+    global agent
+    return agent.msg_data
+
+# 客户端获取配置信息
+@app.post("/api/get_config")
+async def get_config():
+    return CConfig.config
+
+# 更新配置文件
+@app.post("/api/update_config")
+async def update_config(data: dict):
+    global agent
+
+    CConfig.update_config(data)
+    if CConfig.config["Agent"]["is_up"]:
+        agent.update_config()
+    
 
 # -----------------------------------API接口部分----------------------------------------------------------
 

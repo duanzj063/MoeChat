@@ -4,7 +4,7 @@ import os
 from utilss import long_mem, data_base, prompt, core_mem
 from utilss import config as CConfig
 import time
-from threading import Thread
+from threading import Thread, Lock
 import requests
 import jionlp
 import ast
@@ -65,6 +65,7 @@ class Agent:
             # self.prompt += config["prompt"]
 
     def __init__(self):
+        self.lock = Lock()
         self.update_config()
         # self.char = config["char"]
         # self.user = config["user"]
@@ -140,16 +141,16 @@ class Agent:
         os.path.exists(f"./data/agents/{self.char}/data_base") or os.makedirs(f"./data/agents/{self.char}/data_base")
 
         # 加载角色记忆
-        if self.is_long_mem:
-            self.Memorys = long_mem.Memorys()
+        # if self.is_long_mem:
+        self.Memorys = long_mem.Memorys()
         
         # 加载核心记忆
-        if self.is_core_mem:
-            self.Core_mem = core_mem.Core_Mem()
+        # if self.is_core_mem:
+        self.Core_mem = core_mem.Core_Mem()
 
         # 载入知识库
-        if self.is_data_base:
-            self.DataBase = data_base.DataBase()
+        # if self.is_data_base:
+        self.DataBase = data_base.DataBase()
 
     # 知识库内容检索
     def get_data(self, msg: str, res_msg: list) -> str:
