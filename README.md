@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333">
-    <img src="https://custom-icon-badges.demolab.com/badge/百度网盘-下载链接-2d7bf4?style=for-the-badge&logo=百度网盘" />
+    <img src="https://custom-icon-badges.demolab.com/badge/百度网盘-下载链接-2d7bf4?style=for-the-badge&logo=baidunetdisk" />
   </a>
   <a href="https://qm.qq.com/q/6pfdCFxJcc">
     <img src="https://custom-icon-badges.demolab.com/badge/QQ群-967981851-12b7f5?style=for-the-badge&logo=tencent-qq" />
@@ -15,6 +15,7 @@
         <img src="https://custom-icon-badges.demolab.com/badge/哔哩哔哩-芙兰蠢兔-2d7bf4?style=for-the-badge&logo=bilibili" />
     </a>
 </p>
+
 
 
 # 基于GPT-SoVITS的语音交互系统
