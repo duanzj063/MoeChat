@@ -5,15 +5,18 @@
 
 
 <p align="center">
-  <a href="https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333">
-    <img src="https://custom-icon-badges.demolab.com/badge/百度网盘-下载链接-2d7bf4?style=for-the-badge&logo=baidunetdisk" />
+  <a href="https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333" style="text-decoration: none">
+    <img src="https://custom-icon-badges.demolab.com/badge/百度云-Link-4169E1?style=flat&logo=baidunetdisk" />
   </a>
-  <a href="https://qm.qq.com/q/6pfdCFxJcc">
-    <img src="https://custom-icon-badges.demolab.com/badge/QQ群-967981851-12b7f5?style=for-the-badge&logo=tencent-qq" />
+  <a href="https://qm.qq.com/q/6pfdCFxJcc" style="text-decoration: none">
+    <img src="https://custom-icon-badges.demolab.com/badge/QQ群-967981851-00BFFF?style=flat&logo=tencent-qq" />
   </a>
-    <a href="https://space.bilibili.com/3156308">
-        <img src="https://custom-icon-badges.demolab.com/badge/哔哩哔哩-芙兰蠢兔-2d7bf4?style=for-the-badge&logo=bilibili" />
-    </a>
+  <a href="https://space.bilibili.com/3156308" style="text-decoration: none">
+    <img src="https://custom-icon-badges.demolab.com/badge/BiliBili-芙兰蠢兔-FF69B4?style=flat&logo=bilibili" />
+  </a>
+  <a href="https://discord.gg/2JJ6J2T9P7" style="text-decoration: none">
+    <img src="https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord" />
+  </a>
 </p>
 
 
@@ -30,7 +33,7 @@
 
 - 本项目使用GPT-SoVITS作为TTS模块。
 - 集成ASR接口，使用funasr作为语音识别模块基础。
-- Moechat支持所有openai规范的大模型接口。
+- Moechat支持所有openai规范的大语言模型接口。
 - Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟在2.1s左右。
 - Moechat项目拥有全站最快、最精准的长期记忆查询，可根据如“昨天”、“上周”这样的模糊的时间范围精确查询记忆，在11800h CPU的笔记本上测试，查询总耗时仅为80ms左右。
 - 根据情绪选择对应的参考音频。
@@ -81,7 +84,7 @@
 - 新增了根据情绪标签选择指定参考音频。
 - 修复了一些bug。
 
-# 整合包使用说明
+## 整合包使用说明
 网盘下载链接：[![BaiduPan](https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
 
 其他下载方式可进群获取：[![QQ](https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square)](https://qm.qq.com/q/6pfdCFxJcc)
@@ -117,9 +120,9 @@ pip install -r requirements.txt
 python chat_server.py
 ```
 
-### 简易客户端使用方法
+## 简易客户端使用方法
 
-#### Windows
+### Windows
 
 测试使用python 3.10
 如需要服务端单独部署，客户端远程访问，可修改client-gui\src\client_utils.py文件17、18行的ip地址
@@ -131,7 +134,7 @@ python chat_server.py
 GPT-SoVITS-v2pro-20250604\runtime\python.exe client-gui\src\client_gui.py
 ```
 
-#### Linux
+### Linux
 
 ```bash
 # 创建虚拟环境，如果创建过虚拟环境了可以跳过
@@ -147,7 +150,7 @@ pip install -r client-requirements.txt
 python client-gui\src\client_gui.py
 ```
 
-### 配置说明
+## 配置说明
 
 整合包配置文件为config.yaml
 
@@ -227,7 +230,7 @@ Agent:
 
 接口全部使用POST请求。
 
-#### ASR语音识别接口
+### ASR语音识别接口
 
 ```python
 # url为/api/asr
@@ -239,7 +242,7 @@ Agent:
 # 服务端直接返回识别结果文本
 ```
 
-#### 对话接口
+### 对话接口
 
 ```python
 # 对话接口为sse流式接口，服务端会将大模型的回答切片并生成对应的语音数据，一段一段返回客户端
@@ -267,3 +270,15 @@ Agent:
   "done": True    # bool类型，用于判断是否为最后一个数据包
 }
 ```
+
+## 目标
+
+- [ ] 制作英文版Readme
+- [ ] 网页端的相应提速与优化
+- [ ] 网页端加入Live2d-widget
+- [ ] 大语言模型的自我认知与数字生命
+- [ ] 根据传统模型和Basson模型引入性唤醒度参数
+- [ ] 客户端接入3d模型并实现全系投影
+- [ ] 用AI的情绪和动作控制live2d模型的表情和动作
+- [ ] 用AI的情绪和动作控制3d模型的表情和动作
+
