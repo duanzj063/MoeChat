@@ -6,12 +6,16 @@
 
 <p align="center">
   <a href="https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333">
-    <img src="https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square" />
+    <img src="https://custom-icon-badges.demolab.com/badge/百度网盘-下载链接-2d7bf4?style=for-the-badge&logo=百度网盘" />
   </a>
-    <a href="https://qm.qq.com/cgi-bin/qm/qr?点击链接加入群聊【MoeChat（假）】：https://qm.qq.com/q/A6GqC7B6us">
-    <img src="https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square" />
+  <a href="https://qm.qq.com/q/6pfdCFxJcc">
+    <img src="https://custom-icon-badges.demolab.com/badge/QQ群-967981851-12b7f5?style=for-the-badge&logo=tencent-qq" />
   </a>
+    <a href="https://space.bilibili.com/3156308">
+        <img src="https://custom-icon-badges.demolab.com/badge/哔哩哔哩-芙兰蠢兔-2d7bf4?style=for-the-badge&logo=bilibili" />
+    </a>
 </p>
+
 
 # 基于GPT-SoVITS的语音交互系统
 
@@ -28,6 +32,11 @@
 - Moechat支持所有openai规范的大模型接口。
 - Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟在2.1s左右。
 - Moechat项目拥有全站最快、最精准的长期记忆查询，可根据如“昨天”、“上周”这样的模糊的时间范围精确查询记忆，在11800h CPU的笔记本上测试，查询总耗时仅为80ms左右。
+- 根据情绪选择对应的参考音频。
+
+  
+
+  
 
 ## 测试平台
 
@@ -74,7 +83,7 @@
 # 整合包使用说明
 网盘下载链接：[![BaiduPan](https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
 
-其他下载方式可进群获取：![QQ](https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square)
+其他下载方式可进群获取：[![QQ](https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square)](https://qm.qq.com/q/6pfdCFxJcc)
 
 ### Windows
 
