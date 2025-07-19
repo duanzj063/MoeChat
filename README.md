@@ -3,7 +3,15 @@
 <div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="screen/banner.png" alt="banner" style="zoom:50%;" /></a></div>
 
 <div align="center">
-  <a href="README.md">English</a> |
+
+[![百度云](https://custom-icon-badges.demolab.com/badge/百度云-Link-4169E1?style=flat&logo=baidunetdisk)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
+[![QQ群](https://custom-icon-badges.demolab.com/badge/QQ群-967981851-00BFFF?style=flat&logo=tencent-qq)](https://qm.qq.com/q/6pfdCFxJcc)
+[![BiliBili](https://custom-icon-badges.demolab.com/badge/BiliBili-芙兰蠢兔-FF69B4?style=flat&logo=bilibili)](https://space.bilibili.com/3156308)
+[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7)
+![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)]()
+
+
+  <a href="/README.md">English</a> |
   <a href="doc/README_zh.md">Chinese</a>
 </div>
 
