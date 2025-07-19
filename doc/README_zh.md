@@ -51,7 +51,7 @@
 
 ### 测试结果
 
-![](screen/img.png)
+![](/screen/img.png)
 
 ## 更新日志
 ### 2025.06.29
@@ -60,7 +60,7 @@
 
 - 为Moechat添加了简易的web端，可以识别关键词进行表情飘屏，和其他例子特效。
 
-  <div style="text-align: left;"><img src="screen/sample1.png" alt="sample1" style="zoom: 55%;" /></div>
+  <div style="text-align: left;"><img src="/screen/sample1.png" alt="sample1" style="zoom: 55%;" /></div>
 
 ### 2025.06.11
 - 增加角色模板功能：可以使用内置提示词模板创建角色。
