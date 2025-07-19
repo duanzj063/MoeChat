@@ -76,7 +76,7 @@ A powerful voice interaction system designed for natural conversations and immer
 - various bugs fixed .
 
 ## Usage Guide
-You can download the full package here -> [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)](https://mega.nz/file/占位，not ready yet) (still not quit ready yet)
+You can download the full package here -> [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)]() (still not quit ready yet)
 
 Join our Discord server to discuss：[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) 
 
