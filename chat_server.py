@@ -520,15 +520,21 @@ async def text_llm_tts2(params: tts_data, start_time):
             #         tts_stop.set()
             #         break
             if audio_list[i] == None:
+                i += 1
                 continue
-            audio_bytes = BytesIO(audio_list[i])
-            sampling_rate, data = wavfile.read(audio_bytes)
-            # 计算时长（以秒为单位）
-            duration_seconds = data.shape[0] / float(sampling_rate)
-            # 将时长转换为毫秒
-            duration_milliseconds = duration_seconds * 1000
-
-            audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
+            try:
+                audio_bytes = BytesIO(audio_list[i])
+                sampling_rate, data = wavfile.read(audio_bytes)
+                # 计算时长（以秒为单位）
+                duration_seconds = data.shape[0] / float(sampling_rate)
+                # 将时长转换为毫秒
+                duration_milliseconds = duration_seconds * 1000
+    
+                audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
+            except Exception as e:
+                print(f"[错误]{e}")
+                i += 1
+                continue
             data = {"type": "audio", "data": audio_b64, "len": int(duration_milliseconds), "done": False}
             # audio = str(audio_list[i])
             # yield str(data)
