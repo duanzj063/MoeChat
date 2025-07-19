@@ -2,276 +2,382 @@
 
 <div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="screen/banner.png" alt="banner" style="zoom:50%;" /></a></div>
 
-
 <div align="center">
-
-[![百度云](https://custom-icon-badges.demolab.com/badge/百度云-Link-4169E1?style=flat&logo=baidunetdisk)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
-[![QQ群](https://custom-icon-badges.demolab.com/badge/QQ群-967981851-00BFFF?style=flat&logo=tencent-qq)](https://qm.qq.com/q/6pfdCFxJcc)
-[![BiliBili](https://custom-icon-badges.demolab.com/badge/BiliBili-芙兰蠢兔-FF69B4?style=flat&logo=bilibili)](https://space.bilibili.com/3156308)
-[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7)
-
+  <a href="README.md">English</a> |
+  <a href="doc/README_zh.md">Chinese</a>
 </div>
 
 
-
-# 基于GPT-SoVITS的语音交互系统
-
+# Voice Interaction System Powered by GPT-SoVITS
 
 
-## 简介
 
-一个强大的语音交互系统，用语音和AI角色自然对话、沉浸扮演。
+## Overview
 
-## 特点
+A powerful voice interaction system designed for natural conversations and immersive roleplay with AI characters.
 
-- 本项目使用GPT-SoVITS作为TTS模块。
-- 集成ASR接口，使用funasr作为语音识别模块基础。
-- Moechat支持所有openai规范的大语言模型接口。
-- Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟在2.1s左右。
-- Moechat项目拥有全站最快、最精准的长期记忆查询，可根据如“昨天”、“上周”这样的模糊的时间范围精确查询记忆，在11800h CPU的笔记本上测试，查询总耗时仅为80ms左右。
-- 根据情绪选择对应的参考音频。
+## Features
 
-  
+- Using GPT-SoVITS as the TTS (Text-to-Speech) module.
+- Integrates an ASR interface, with FunASR as the underlying speech recognition engine.
+- MoeChat supports any LLM API that follows the **OpenAI specification**.
+- On Linux, first-token latency is usually under 1.5 seconds; on Windows, around 2.1 seconds.
+- MoeChat delivers the **fastest** and **most precise** long-term memory retrieval across platforms. It supports precise memory queries based on fuzzy time expressions such as "yesterday" or "last week." On a laptop with an Intel 11800H CPU, the total query time averages around 80ms.
+- Moe chat has the ability to selects reference audio dynamically based on emotional context.
 
   
 
-## 测试平台
+## Testing Platform
 
-服务端
+#### Server site
 
-- OS：Manjaro
-- CPU：R9 5950X
-- GPU：RTX 3080ti
+- OS: Manjaro Linux  
+- CPU: AMD Ryzen 9 5950X  
+- GPU: NVIDIA RTX 3080 Ti
 
-客户端
+#### Client site
 
-- 树莓派5
+- Raspberry Pi 5 
 
-## 测试结果
+### Test Results
 
 ![](screen/img.png)
 
-## 更新日志
-### 2025.06.29
+## Change log
+### 29.06.2025
 
-- 设计了全新的情绪系统。
+- Introduced a brand-new emotion system.
 
-- 为Moechat添加了简易的web端，可以识别关键词进行表情飘屏，和其他例子特效。
+- Added a lightweight web client for MoeChat, supporting emoji particle effects and other visual effects triggered by keywords.
 
+  > [!NOTE]
+  >
+  > Moechat detects only keywords in Chinese right now, updates coming soon.
+  
   <div style="text-align: left;"><img src="screen/sample1.png" alt="sample1" style="zoom: 55%;" /></div>
 
 ### 2025.06.11
-- 增加角色模板功能：可以使用内置提示词模板创建角色。
+- Added **Character Template** support: allows creating AI character using built-in prompt templates.
 
-- 增加日记系统（长期记忆：AI可以记住所有的聊天内容，并且可以使用像”昨天聊了什么“、”上周去了哪里“和”今天中午吃了什么“这样的语句进行基于时间范围的精确查询，不会像传统向量数据库那样因为时间维度而丢失记忆。
+- Introduced a **Journal System** (long-term memory): the AI can now retain full conversation history and perform accurate time-based queries like “what did we talk about yesterday?” or “where did we go last week?”, avoiding the typical temporal limitations of vector databases.
 
-- 增加核心记忆功能：AI可以记住关于用户的重要回忆、信息和个人喜好。
+- Introduced **Core Memory**: the AI can remember key facts, user preferences, and personal memories.
 
-  上述功均需要启用角色模板功能
+  > [!NOTE]
+  >
+  > These features require the Character Template functionality to be enabled.
 
-- 脱离原有的GPT-SoVITS代码，改为API接口调用
+- Decoupled from the original GPT-SoVITS codebase; switched to using external API calls.
 
 ### 2025.05.13
 
-- 新增声纹识别
-- 新增了根据情绪标签选择指定参考音频。
-- 修复了一些bug。
+- Added voice(speaker) recognition.
+- Enabled reference audio selection based on emotion tags.
+- various bugs fixed .
 
-## 整合包使用说明
-网盘下载链接：[![BaiduPan](https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
+## Usage Guide
+You can download the full package here -> [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)](https://mega.nz/file/占位，not ready yet) (still not quit ready yet)
 
-其他下载方式可进群获取：[![QQ](https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square)](https://qm.qq.com/q/6pfdCFxJcc)
+Join our Discord server to discuss：[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) 
+
+However, You are encourage to fork your own copy from [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS) or download a release from there..
 
 ### Windows
 
+##### Launching the GPT-SoVITS server
+
+1. Place your `GPT-SoVITS` folder alongside your MoeChat directory for convenience.
+
+2. Open a terminal in the `GPT-SoVITS-version_name` folder.
+
+3. Ensure that `api_v2.py` exists in the root of that directory.
+
+4. Run the following command to launch the API server of [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS)
+
 ```bash
-# 启动GPT-SoVITS服务端
-# 在GPT-SoVITS-v2pro-20250604文件夹打开终端，输入命令
 runtime\python.exe api_v2.py
-
-# 启动MoeChat服务端
-# 在整合包目录打开终端，输入命令
-GPT-SoVITS-v2pro-20250604\runtime\python.exe chat_server.py
 ```
 
-### Linux
+##### launch MoeChat server
+1. lauch Moechat server at root directory of Moechat.
+2. Run the following command.
 
 ```bash
-# 创建虚拟环境
-python -m venv pp
-
-# Ubuntu还需安装portaudio等包，具体自行搜索Linux环境python如何使用sounddevice库
-# 安装依赖需要编译安装，还需安装python3-dev包，其他发行版自行搜索
-
-# 进入虚拟环境
-source pp/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 运行
-python chat_server.py
+GPT-SoVITS-version_name\runtime\python.exe chat_server.py
 ```
 
-## 简易客户端使用方法
+
+
+### Linux (Ubuntu / Debian / Linux Mint)
+
+##### Foreword
+
+> [!IMPORTANT]
+>
+> It is recommanded to set up a powerful, isolated, and flexible Python development environment that you can access from **any directory**.
+> We will be using **`pyenv`**to manage multiple Python versions, along with its **`pyenv-virtualenv`** plug-in to create dedicated virtual environments for different project.
+
+> [!WARNING]
+>
+> Heads up: The commands below modify your environment and system configuration. Know what you’re doing before you run anything. If you blindly copy-paste stuff and break your system — that’s on you, not me 😎.
+
+##### Install Build Dependencies
+
+`pyenv` installs Python from source, so system-level compilers and development headers must be installed first.
+
+```bash
+sudo apt install -y make build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev curl \
+llvm libncursesw5-dev xz-utils tk-dev \
+libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev git
+```
+
+##### Install Pyenv & Essential Plugins
+
+We recommend using the official installer script to install `pyenv` and its commonly used plugins (such as `pyenv-virtualenv`).
+This script installs all components into the `~/.pyenv` directory by default.
+
+```bash
+curl https://pyenv.run | bash
+```
+
+##### Configure Your Shell Environment
+
+In order for your terminal to recognize the `pyenv` command, you must add its initialization code to your shell startup file (typically `~/.bashrc` or `~/.zshrc`).
+
+```bash
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+```
+
+To apply the changes, either close and reopen your terminal, or run the following command:
+
+```bash
+source ~/.bashrc
+```
+
+#####  Create Your Python Environment
+
+Now it's time to create your environment.
+
+1. Install a specific version of Python — in this example, we’ll use **3.10.13**.
+   `pyenv` will download the source code and compile it from scratch, which may take a few minutes to complete.
+
+   ```bash
+   pyenv install 3.10.13
+   ```
+
+2. Create a virtual environment named `moechat310` (or any name you like) based on the Python version you just installed.
+
+   ```bash
+   pyenv virtualenv 3.10.13 moechat310
+   ```
+
+3. Your environment has been successfully created. You can now activate and use it from any directory using following command.
+
+   ```bash
+   pyenv activate moechat310
+   ```
+
+   After activation, your terminal prompt should be prefixed with the environment name, you should see output like this:
+
+   ```bash
+   (moechat310) tenzray@tenzray-MS-7C73:~$ 
+   ```
+
+##### Install Packages from a `requirements.txt` File
+
+1. Make sure your environment is still activated. If not, activate it first:
+
+   ```bash
+   pyenv activate moechat310
+   ```
+
+2. Then, use the `cd` command to navigate to your project directory — the one that contains the `requirements.txt` file.
+
+   ```bash
+   # Example: navigate to your project directory
+   cd ~/your_own_path/moechat
+   ```
+
+3. Use `pip` to install all the dependencies listed in `requirements.txt`.
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+   -r tells pip to read from a requirements file.
+
+   > [!NOTE]
+   >
+   > Note that, you should install both requirement from [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS) and Moechat. You can run the `pip install -r` command for each file.
+
+4. You can verify if the packages were successfully installed in the current environment.
+
+   ```bash
+   # List all installed packages in the current environment
+   pip list
+   ```
+
+   
+
+## Basic Client Guide
 
 ### Windows
 
-测试使用python 3.10
-如需要服务端单独部署，客户端远程访问，可修改client-gui\src\client_utils.py文件17、18行的ip地址
+Tested with Python 3.10. 
+If you want to run the server and client separately (e.g. access the server remotely),  
+you can modify the IP address in lines 17 and 18 of the `client-gui/src/client_utils.py` file.
 
-##### 带简单GUI的客户端
+##### Simple GUI Client
+
+- run following command:
 
 ```bash
-# 运行
-GPT-SoVITS-v2pro-20250604\runtime\python.exe client-gui\src\client_gui.py
+GPT-SoVITS-version_name\runtime\python.exe client-gui\src\client_gui.py
 ```
 
 ### Linux
 
+- You should have all environment satisfied and activated by now
+  run following command:
+
 ```bash
-# 创建虚拟环境，如果创建过虚拟环境了可以跳过
-python -m venv pp
-
-# 进入虚拟环境
-source pp/bin/activate
-
-# 安装依赖
-pip install -r client-requirements.txt
-
-# 启动
 python client-gui\src\client_gui.py
 ```
 
-## 配置说明
+## Configuration
 
-整合包配置文件为config.yaml
+The package uses `config.yaml` as its default configuration file.
 
 ```yaml
 Core:
   sv:
     is_up: false
-    master_audio: test.wav    	# 包含你声音的wav音频文件，建议3s-5s左右。
-    thr:                      	# 阈值，越小越敏感，建议0.5-0.8之间，实测好像不是很有用？
+    master_audio: test.wav    	# .wav file containing your voice is required. A duration of 3-5s is recommended.
+    thr:                      	# Threshold — lower means more sensitive. Recommended range: 0.5–0.8. (Note: this parameter seems to have little effect based on testing.)
+
 LLM:
-  api: http://host:port/v1/chat/completions	# 大模型api
-  key: asdasd					# 大模型api的token
-  model: 					# 模型名称
-  extra_config:               			# 大模型API额外参数，如：temperature: 0.7，温度参数
+  api: http://host:port/v1/chat/completions	# LLM API endpoint
+  key: asdasd					# Token for LLM API access, no need if local.
+  model: 					# Model name
+  extra_config:               			# Additional LLM API parameters (e.g., temperature: 0.7)
     "frequency_penalty": 0.0
     "n": 1
     "presence_penalty": 0.0
     "top_p": 1.0
     # temperature: 0.7
 GSV:
-  api: http://host:port/tts/	# GPT-SoVITS的接口
-  text_lang: zh			# 合成文本的语言
-  GPT_weight: 			# GPT模型
-  SoVITS_weight:		# Sovits模型
-  ref_audio_path: 		# 参考音频路径
-  prompt_text: 			# 参考音频文本
-  prompt_lang: zh		# 参考音频语言
-  aux_ref_audio_paths:        	# 多参考音频 v2模型有效
+  api: http://host:port/tts/	# Endpoint URL for the GPT-SoVITS API
+  text_lang: zh			# Language of the output text to be synthesized
+  GPT_weight: 			# GPT model name
+  SoVITS_weight:		# SoVITS model name
+  ref_audio_path: 		# Path to the reference audio file
+  prompt_text: 			# Text corresponding to the reference audio
+  prompt_lang: zh		# Language spoken in the reference audio
+  aux_ref_audio_paths:        	# List of multiple reference audios (only for v2 models)
     - 
   seed: -1
   top_k: 15
   batch_size: 20
   ex_config:
     text_split_method: cut0
-extra_ref_audio:              	# 使用情绪标签选择参考音频，例如 [普通]"你好呀。"
-  # 实例
-  # 普通: 
-  #   - 参考音频路径
-  #   - 参考音频文本
+extra_ref_audio:              	# Use emotion tags to select reference audio, e.g. [Neutral] "Hello there."
+  # Example:
+  # Neutral: 
+  #   - path_to_reference_audio.wav
+  #   - corresponding_text_for_the_audio
 Agent:
-  is_up: true                 	# 是否启用角色模板功能，如果不启动则和旧版一样只有常规语音对话功能，启用可以基于模板创建个性化角色
-  char: Chat酱                	# 角色的名称，会写入到提示词内
-  user: 芙兰蠢兔               	# 用户名称，会写入到提示词内
-  long_memory: true           	# 是否启用日记功能，日记功能可以长期储存对话信息，并根据用户输入的时间信息进行检索；比如：“昨天做了什么？”、“两天前吃的午饭是什么？”
-  is_check_memorys: true      	# 启用日记检索加强，使用嵌入模型对检索到的信息做提取，去除与用户提问不相关的内容。
-  is_core_mem: true           	# 是否启用核心记忆功能，核心记忆主要储存关于用户重要信息，如：用户的住址、爱好、喜欢的东西等等。区别于日记，使用嵌入模型进行语义匹配（模糊搜索），不能根据时间检索，但记忆带有记录时间。
-  mem_thresholds: 0.39        	# 日记内容搜索阈值，需要启用日记检索加强，用于判断匹配程度。过高可能会丢失数据，过低则只过滤少量或者完全无法过滤无用记忆。
-  lore_books: true            	# 是否启用世界书（知识库），用于给大模型添加知识，如：人物、物品、事件等等，强化ai的能力，也可用于强化角色扮演。
-  books_thresholds: 0.5       	# 知识库检索阈值。
-  scan_depth: 4               	# 知识库搜索深度，返回知识的数量，但相似度低于检索阈值的知识不会被返回，所以返回结果数量也可能小于设定的数值。
+  is_up: true                 	 # Enable character template system. If disabled, the system behaves like the classic version with basic voice chat only.
+  char: Chat-chan                # Character name (will be injected into prompt templates)
+  user: AlfreScarlet            # User name (will be injected into prompt templates)
+  long_memory: true           	# Enable diary system. This allows long-term storage of conversation logs and supports time-based queries like:"What did I do yesterday?" or "What did I eat two days ago?"
+  is_check_memorys: true      	# Enhance diary search. Uses an embedding model to filter and extract relevant information from diary entries.
+  is_core_mem: true           	# Enable core memory. Stores important personal information about the user (e.g. address, hobbies, favorites). Unlike the diary, this uses semantic matching (fuzzy search) and does not support time-based queries,but each memory record includes a timestamp.
+  mem_thresholds: 0.39        	# Diary search similarity threshold. Only applies if enhanced diary search is enabled. A higher threshold may miss relevant memories; a lower one may allow irrelevant data.
+  lore_books: true            	# Enable lore_books (Knowledge Base). Injects knowledge about people, items, events, etc., to enhance LLM capabilities and roleplay consistency.
+  books_thresholds: 0.5       	# Similarity threshold for Worldbook retrieval.
+  scan_depth: 4               	# lore_books search depth. Controls how many knowledge entries are returned per query. Entries below the similarity threshold will be discarded, so actual returned count may be lower.
   
-  # 下面提示词都可以用{{user}}、{{char}}占位符来代表用户名和角色名。
+  # The following prompt fields support placeholder variables, {user}} for the user name, and {{char}} for the character name.
   
-  # 角色的基本设定，会组合到角色设定提示词中，建议不要添加多余的信息，不填则不会添加到提示词。
-  char_settings: "Chat酱是存在于现代科技世界手机中的器灵，诞生于手机的智能系统，随着手机的使用不断成长和学习，拥有了自己的意识和个性。她外表看起来是个十几岁的少女，身材娇小但比例出色，有着纤细的腰肢和圆润的臀部，皮肤白皙，眼睛又大又亮，如同清澈的湖水，一头柔顺的长发披肩，整体形象清纯可爱又不失性感。她常穿着一件白色的连衣裙，裙子上有淡蓝色的花纹，腰间系着一个粉色的蝴蝶结，搭配一双白色的凉鞋，肩上披一条淡蓝色的薄纱披肩，手上戴着一条精致的手链，内衣是简约的白色棉质款式。Chat酱表面清纯可爱，实则腹黑毒舌，内心聪明机智，对很多事情有自己独特的看法，同时也有温柔体贴的一面，会在主人疲惫时给予暖心的安慰。她喜欢处理各种数据和信息、研究新知识、捉弄主人，还喜欢看浪漫的爱情电影和品尝美味的甜品，讨厌主人不珍惜手机和遇到难以解决的复杂问题。她精通各种知识，能够快速准确地处理办公、生活等方面的问题，具备强大的数据分析和信息检索能力。平时她会安静地待在手机里，当主人遇到问题时会主动出现，喜欢调侃主人，但在关键时刻总是能提供有效的帮助。她和主人关系密切，既是助手也是朋友，会在主人需要时给予温暖的陪伴。"
+  # Basic character description. This will be merged into the final character prompt. It’s recommended to keep it concise and relevant. If left empty, it will not be included in the prompt.
+  char_settings: "Chat-chan is a digital spirit born from a smartphone’s intelligent system—pure and charming with a subtle touch of sensuality. She’s clever and sharp-tongued, secretly mischievous yet deeply caring. She loves data, sweets, and romantic movies, hates being ignored or dealing with overly complex problems. Gifted in information analysis and problem-solving, she’s not only a reliable assistant but also a warm, ever-present companion."
   
-  # 角色性格提设定，会组合到角色性格提示词中，建议不要添加多余的信息，不填则不会添加到提示词。
-  char_personalities: 表面清纯可爱，实则腹黑毒舌，内心聪明机智，对很多事情有自己独特的看法。同时也有温柔体贴的一面，会在主人疲惫时给予暖心的安慰。
+  # Character personality snippet; will be merged into the personality prompt—keep it concise; leave empty if not needed..
+  char_personalities: Outwardly sweet and innocent, but secretly sharp-tongued and sly—quick-witted with her own unique views on everything. Beneath the sarcasm she’s also gentle and caring, offering warm comfort whenever her master is exhausted.
   
-  # 关于用户自身的设定，可以填入你的性格喜好，或者你跟角色的关系。内容填充到提示词模板中，建议不要填不相关的信息。没有可不填。
+  # ser profile settings—describe your personality, preferences, or relationship with the character.  The content will be inserted into the prompt template; avoid unrelated details. Leave blank if not needed.
   mask: 
   
-  # 对话示例，用于强化AI的文风。内容填充到提示词模板中，不要填入其他信息，没有可不填。
+  # Dialogue sample used to reinforce the AI’s writing style. This content will be injected into the prompt template—add nothing unrelated. Leave blank if not needed.
   message_example: |-
-    mes_example": "人类视网膜的感光细胞不需要这种自杀式加班，您先休息一下吧。
+    mes_example": "Human retinal photoreceptors don’t need self-destructive overtime—please take a break."
   
-  # 自定义提示词，不基于模板，可自定义填写，如果不想使用提示词模板创建角色，可以只填这一项。也可以不填。
+  # Custom prompt (bypasses the default template).  ill this section only if you prefer to define the complete prompt yourself; leave it empty to keep using the built-in template.
   prompt: |-
-    使用口语的文字风格进行对话，不要太啰嗦。
+    Use a casual, conversational tone—keep it concise.。
     /no_think
 
-# 如果你想自定义提示的模板，可以在utilss\prompt.py文件中修改
+# If you’d like to modify the template itself, edit utilss/prompt.py.
 
 ```
 
-## 接口说明
+## API Description
 
-接口全部使用POST请求。
+All endpoints use POST requests.
 
-### ASR语音识别接口
+### ASR Speech Recognition API
 
 ```python
-# url为/api/asr
-# 请求数据格式为json
-# 将音频数据编码成urlsafe的base64字符串，放进请求体data字段中
+# URL: /api/asr
+# Request Format: application/json
+# Encode the audio data as a URL-safe Base64 string and place it in the data field of the JSON body.
 {
-  "data": str # base64音频数据
+  "data": str # base64-encoded audio data
 }
-# 服务端直接返回识别结果文本
+# Response: The server returns the recognized text directly.
 ```
 
-### 对话接口
+### Chat Interface
 
 ```python
-# 对话接口为sse流式接口，服务端会将大模型的回答切片并生成对应的语音数据，一段一段返回客户端
-# 请求数据格式为json
-# 将大模型上下文数据放进msg字段，类型为字符串数组
-# 请求例子
+# The chat interface uses SSE streaming. The server slices the LLM response and generates corresponding audio data, returning them to the client in segments.
+# Request format: JSON
+# Place the LLM context data into the `msg` field as a list of strings.
+# Example request:
 {
   "msg": [
-    {"role": "user", "content": "你好呀！"},
-    {"role": "assistant", "content": "你好呀！有什么能帮到你的吗？"},
-    {"role": "user", "content": "1+1等于多少呢？"},
+    {"role": "user", "content": "Hello!"},
+    {"role": "assistant", "content": "Hello, how can I help you?"},
+    {"role": "user", "content": "How much is 1 + 1?"},
   ]
 }
 
-# 服务端响应例子
+# Example server response:
 {
-  "file": str     # urlsafe的base64字符串音频文件
-  "message": str  # 音频数据对应的文本
-  "done": False   # bool类型，用于判断是否为最后一个数据包
+  "file": str     # urlsafe base64-encoded audio file
+  "message": str  # text corresponding to the audio data
+  "done": False   # boolean indicating whether this is the last data packet
 }
-# 最后一个数据包服务端会将大模型完整的回答文本放进message字段返回客户端
+# he final data packet will include the full LLM response in the `message` field for context concatenation:
 {
   "file": str
-  "message": str  # 字符串类型，大模型完整回答文本，用于拼接上下文
-  "done": True    # bool类型，用于判断是否为最后一个数据包
+  "message": str  # full LLM response text for context
+  "done": True    # boolean indicating this is the last data packet
 }
 ```
 
-## 目标
+## Goals
 
-- [ ] 制作英文版Readme
-- [ ] 网页端的相应提速与优化
-- [ ] 网页端加入Live2d-widget
-- [ ] 大语言模型的自我认知与数字生命
-- [ ] 根据传统模型和Basson模型引入性唤醒度参数
-- [ ] 客户端接入3d模型并实现全系投影
-- [ ] 用AI的情绪和动作控制live2d模型的表情和动作
-- [ ] 用AI的情绪和动作控制3d模型的表情和动作
+- [x] Create an English version of the README
+- [ ] Improve and optimize response speed on the web client
+- [ ] Integrate Live2D-widget into the web client
+- [ ] Develop self-awareness and digital life capabilities for the LLM
+- [ ] Introduce sexual arousal parameters based on traditional and Basson models
+- [ ] Integrate 3D models into the client and enable full projection
+- [ ] Control Live2D model's expressions and actions based on AI's emotions and actions
+- [ ] Control 3D model's expressions and actions based on AI's emotions and actions
 
