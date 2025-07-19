@@ -1,9 +1,7 @@
 sounddevice
-soundfile
-onnxruntime-gpu
 numpy<2.0
-scipy
 noisereduce
-pygame
 requests
-flet[all]==0.27.6
+flet[all]
+flet-audio
+websockets
