@@ -7,8 +7,8 @@
 [![百度云](https://custom-icon-badges.demolab.com/badge/百度云-Link-4169E1?style=flat&logo=baidunetdisk)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
 [![QQ群](https://custom-icon-badges.demolab.com/badge/QQ群-967981851-00BFFF?style=flat&logo=tencent-qq)](https://qm.qq.com/q/6pfdCFxJcc)
 [![BiliBili](https://custom-icon-badges.demolab.com/badge/BiliBili-芙兰蠢兔-FF69B4?style=flat&logo=bilibili)](https://space.bilibili.com/3156308)
-<!--[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) -->
 [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)](https://mega.nz/folder/LsZFEBAZ#mmz75Q--hKL6KG9jRNIj1g)
+<!--[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) -->
 
 
   <a href="/README.md">English</a> |
@@ -84,9 +84,9 @@ A powerful voice interaction system designed for natural conversations and immer
 - various bugs fixed .
 
 ## Usage Guide
-You can download the full package here -> [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)](https://github.com/AlfreScarlet/MoeChat) (still not quit ready yet)
+You can download the full package here -> [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)]([https://github.com/AlfreScarlet/MoeChat](https://mega.nz/folder/LsZFEBAZ#mmz75Q--hKL6KG9jRNIj1g))
 
-Join our Discord server to discuss：[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) 
+<!--Join our Discord server to discuss：[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7)--> 
 
 However, You are encourage to fork your own copy from [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS) or download a release from there..
 
