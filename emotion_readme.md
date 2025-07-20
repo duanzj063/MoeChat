@@ -26,7 +26,7 @@
 
 情感控制函数使用了James A Russell 的情感圆环模型作为基础。Russell把情绪设定为分布在二维空间的连续状态，而不是单纯的离散分类如： “高兴，伤心，兴奋，紧张，生气等）
 
-<div style="text-align: left;"><img src="/media/tenzray/The BIg Disk/moechat2/MoeChat-main/screen/Circumplex_emotion.png" alt="Circumplex_emotion" style="zoom: 33%;" /></div>
+<div style="text-align: left;"><img src="screen/Circumplex_emotion.png" alt="Circumplex_emotion" style="zoom: 33%;" /></div>
 
 即讲情感分为两个指标即***愉快度***（Valence）和***强度***（Arousal）。
 
