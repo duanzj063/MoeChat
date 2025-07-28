@@ -10,7 +10,7 @@ import pickle
 import requests
 import jionlp
 from bisect import bisect_left, bisect_right
-from utilss import config as CConfig
+from utilss import config as CConfig, log as Log
 
 class Memorys:
     def update_config(self):
@@ -59,23 +59,23 @@ class Memorys:
                         with open(file_path.replace(".yaml", ".pkl"), "rb") as f:
                             tmp_data = pickle.load(f)
                             self.vectors += tmp_data
-                        print(f"[提示]加载记忆【{file}】")
+                        Log.logger.info(f"加载记忆【{file}】")
                     else:
-                        print(f"[提示]向量化记忆【{file}】")
+                        Log.logger.info(f"向量化记忆【{file}】")
                         t_v = embedding.t2vect(tag)
                         msg_vectors.append(t_v)
                         with open(file_path.replace(".yaml", ".pkl"), "wb") as f:
                             pickle.dump(t_v, f)
-                        print(f"[提示]向量化完成【{file}】")
+                        Log.logger.info(f"向量化完成【{file}】")
                 except:
-                    print(f"[错误]【{file_path}】记忆加载失败...")
+                    Log.logger.error(f"【{file_path}】记忆加载失败...")
                     continue
             # print(f"[错误]【{path}】")
         # self.char_vectors = np.concatenate(char_v)
         # self.user_vectors = np.concatenate(user_v)
         # if msg_vectors:
         #     self.vectors = np.concatenate(msg_vectors)
-        print(f"[提示]共加载{len(self.memorys_key)}条记忆...{len(self.vectors)}条记忆向量")
+        Log.logger.info(f"共加载{len(self.memorys_key)}条记忆...{len(self.vectors)}条记忆向量")
 
         # 建立、加载索引数据库
         # if os.path.exists(self.char_file_path) and os.path.exists(self.user_file_path):
@@ -108,7 +108,7 @@ class Memorys:
                     time_span_list.append(time_st1)
                     time_span_list.append(time_st2)
                 except:
-                    print(f"[错误]获取时间区间失败{res_t}")
+                    Log.logger.error(f"获取时间区间失败{res_t}")
         if not time_span_list:
             return
         
@@ -119,7 +119,7 @@ class Memorys:
             return
         # 将时间范围内的记忆添加到结果中
         if self.is_check_memorys:
-            print(f"[提示]深度检索记忆，检索阈值{self.thresholds}")
+            Log.logger.info(f"深度检索记忆，检索阈值{self.thresholds}")
             q_v = embedding.t2vect([msg])[0]
             tmp_msg = ""
             for index in range(res_index[0]+1, res_index[1]+1):
@@ -192,13 +192,13 @@ class Memorys:
             res = requests.post(llm_config["api"], json=res_body, headers=headers, timeout=15)
             res = res.json()["choices"][0]["message"]["content"]
             res = jionlp.remove_html_tag(res).replace(" ", "").replace("\n", "")
-            print(f"[记录日记结果]【{res}】")
+            Log.logger.info(f"记录日记结果【{res}】")
             if res.find("日常闲聊") == -1:
                 res_tag = res
             else:
                 res_tag = "日常闲聊"
         except:
-            print("【错误获取聊天信息失败！】")
+            Log.logger.error("错误获取聊天信息失败！")
             res_tag = "日常闲聊"
         t_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t_n))
         m1 = data[-2]["content"]

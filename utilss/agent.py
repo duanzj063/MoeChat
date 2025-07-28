@@ -1,7 +1,7 @@
 # 角色模板
 
 import os
-from utilss import long_mem, data_base, prompt, core_mem
+from utilss import long_mem, data_base, prompt, core_mem, log as Log
 from utilss import config as CConfig
 import time
 from threading import Thread, Lock
@@ -13,6 +13,7 @@ import ast
 import re
 import json
 import yaml
+from ruamel.yaml import YAML
 
 class Agent:
     def update_config(self):
@@ -95,7 +96,7 @@ class Agent:
             with open(f"./data/agents/{self.char}/history.yaml", "r", encoding="utf-8") as f:
                 msg_list = yaml.safe_load(f)
                 self.msg_data += msg_list
-
+                Log.logger.info(f"当前上下文长度：{len(msg_list)}")
         except:
             pass
         if CConfig.config["Agent"]["start_with"] and len(self.msg_data) == 0:
@@ -265,8 +266,8 @@ class Agent:
             ttt1 = Thread(target=self.insert_core_mem, args=(m1, self.msg_data_tmp[-1]["content"], self.msg_data[-1]["content"]))
             ttt1.daemon = True
             ttt1.start()
-        except:
-            print(f"[错误]{self.msg_data_tmp}")
+        except Exception as e:
+            Log.logger.error(f"核心记忆插入失败：{self.msg_data_tmp}，错误：{e}")
 
         ttt2 = Thread(target=self.Memorys.add_memory1, args=(msg_data_tmp, self.tt, self.llm_config))
         ttt2.daemon = True
@@ -279,8 +280,12 @@ class Agent:
         #     "messages": self.msg_data[-60:]
         # }
 
+        yaml = YAML()
+        yaml.indent(mapping=2, sequence=4, offset=2)  # 设置缩进格式
+        yaml.default_flow_style = False  # 禁用流式风格（更易读）
+        yaml.allow_unicode = True  # 允许 unicode 字符（如中文）
         with open(f"./data/agents/{self.char}/history.yaml", "a", encoding="utf-8") as f:
-            yaml.safe_dump(self.msg_data_tmp, f, allow_unicode=True)
+            yaml.dump(self.msg_data_tmp, f)
             # for mm in self.msg_data_tmp:
             #     role = mm["role"]
             #     content = mm["content"]

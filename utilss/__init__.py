@@ -6,3 +6,5 @@ from . import data_base
 from . import prompt
 from . import core_mem
 from . import config
+from . import socket_asr
+from . import log

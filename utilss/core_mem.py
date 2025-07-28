@@ -1,6 +1,6 @@
 # import 
 from utilss import embedding
-from utilss import config as CConfig
+from utilss import config as CConfig, log as Log
 import yaml
 import time
 import faiss
@@ -77,4 +77,4 @@ class Core_Mem:
             yaml.safe_dump(m_list, f, allow_unicode=True)
         vects = embedding.t2vect(msg)
         self.index.add(vects)
-        print(f"[提示]添加核心记忆{msg}")
+        Log.logger.info(f"[提示]添加核心记忆{msg}")

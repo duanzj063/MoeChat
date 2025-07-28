@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 import faiss
 from utilss import embedding
-from utilss import config as CConfig
+from utilss import config as CConfig, log as Log    
 
 os.environ["KMP_DUPLICATE_LIB_OK"]= "TRUE"
 
@@ -72,10 +72,10 @@ class DataBase:
                     pick_data = pickle.dumps(res_data)
                     with open(f"{self.path}/tmp/labels/{books[index]}.pkl", "wb") as f2:
                         f2.write(pick_data)
-                    print(f"[提示]成功向量化【{books[index]}】世界书，共加载{len(tmp1)}条数据。")
+                    Log.logger.info(f"成功向量化【{books[index]}】世界书，共加载{len(tmp1)}条数据。")
                     base_list[books[index]] = sum_md5(books_path[index])
                 except:
-                    print(f"[错误]世界书[{ books[index]}]加载错误")
+                    Log.logger.error(f"[错误]世界书[{ books[index]}]加载错误")
                     base_list[books[index]] = sum_md5(books_path[index])
         
         # 加载向量，建立数据库、索引，并保存，更新总表内容
@@ -88,7 +88,7 @@ class DataBase:
                 tmp_data =  pickle.load(f)
             tmp_list.append(tmp_data["vect"])
             self.databases += tmp_data["text"]
-            print(f"[提示]成功加载【{file}】世界书，共加载{len(tmp_data['vect'])}条数据。")
+            Log.logger.info(f"成功加载【{file}】世界书，共加载{len(tmp_data['vect'])}条数据。")
         with open( f"{self.path}/tmp/label.yaml", "w") as f:
              yaml.safe_dump(base_list, f)
         if len(tmp_list) > 0:

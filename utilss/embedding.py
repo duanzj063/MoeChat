@@ -2,6 +2,7 @@ from modelscope.pipelines import pipeline
 from modelscope.utils.constant import Tasks
 from modelscope import snapshot_download
 import numpy as np
+from utilss import log as Log
 
 # def load_model():
 #     model = SentenceTransformer("./utilss/models/Qwen3-Embedding-0.6B")
@@ -30,7 +31,7 @@ def load_model():
 try:
     embedding_model = load_model()
 except:
-    print(f"[错误]embedding模型未安装，开始安装embedding模型...")
+    Log.logger.warning(f"embedding模型未安装，开始安装embedding模型...")
     model_id = "iic/nlp_gte_sentence-embedding_chinese-base"
     local_dir = "./utilss/models/nlp_gte_sentence-embedding_chinese-base"
     snapshot_download(model_id = model_id, local_dir=local_dir)

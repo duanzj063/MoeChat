@@ -68,6 +68,8 @@ now_dir = os.getcwd()
 sys.path.append(now_dir)
 sys.path.append("%s/vad_utils" % (now_dir))
 from utilss import config as CConfig
+from utilss import socket_asr as Socket_asr
+from utilss import log as Log
 import requests
 import json
 import time
@@ -98,7 +100,7 @@ import re
 import jionlp
 from pysilero import VADIterator
 from scipy.signal import resample
-import scipy.io.wavfile as wavfile
+# import scipy.io.wavfile as wavfile
 
 
 # t2s_weights = config_data["GSV"]["GPT_weight"]
@@ -134,7 +136,7 @@ try:
         device="cuda:0",
     )
 except:
-    print("[提示]未安装ASR模型，开始自动安装ASR模型。")
+    Log.logger.warning("[提示]未安装ASR模型，开始自动安装ASR模型。")
     from modelscope import snapshot_download
     model_dir = snapshot_download(
         model_id="iic/SenseVoiceSmall",
@@ -160,9 +162,8 @@ else:
 # 提交到大模型
 def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, event: Event):
     # 获取多线程锁
-    if CConfig.config["Agent"]["is_up"]:
-        agent.lock.acquire()
-
+    # if CConfig.config["Agent"]["is_up"]:
+    #     agent.lock.acquire()
     def get_emotion(msg: str):
         res = re.findall(r'\[(.*?)\]', msg)
         if len(res) > 0:
@@ -188,9 +189,16 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, ev
     t_t = time.time()
     try:
         response = requests.post(url = CConfig.config["LLM"]["api"], json=data, headers=headers,stream=True)
+        # print(response.status_code)
     except:
-        print("无法链接到LLM服务器")
-        return JSONResponse(status_code=400, content={"message": "无法链接到LLM服务器"})
+        Log.logger.error("无法链接到LLM服务器")
+        return
+        # return JSONResponse(status_code=400, content={"message": "无法链接到LLM服务器"})
+    if response.status_code != 200:
+        res_msg_list.append("DONE_DONE")
+        Log.logger.error("无法链接到LLM服务器")
+        return
+        # return JSONResponse(status_code=400, content={"message": "无法链接到LLM服务器"})
     
     # 信息处理
     # biao_dian_2 = ["…", "~", "～", "。", "？", "！", "?", "!"]
@@ -204,13 +212,16 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, ev
     ref_audio = ""
     ref_text = ""
     # biao_tmp = biao_dian_3
+    # if response.status_code == 200:
     for line in response.iter_lines():
         if event.is_set():
+            response.close()
+            Log.logger.info(f"客户端打断回答")
             break
         if line:
             try:
                 if j:
-                    print(f"\n[大模型延迟]{time.time() - t_t}")
+                    Log.logger.info(f"\n[大模型延迟]{time.time() - t_t}")
                     t_t = time.time()
                     j = False
                 decoded_line = line.decode('utf-8')
@@ -223,10 +234,12 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, ev
                         tmp_msg += msg_t
                 res_msg = res_msg.replace("...", "…")
                 tmp_msg = tmp_msg.replace("...", "…")
-            except:
-                err = line.decode("utf-8")
-                print(f"[错误]：{err}")
+            except Exception as e:
                 continue
+                # err = line.decode("utf-8")
+                # print(f"[错误]：{err}")
+                # print(e)
+                # break
             # if not tmp_msg:
             #     continue
             ress = ""
@@ -255,7 +268,7 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, ev
                 ress = jionlp.remove_html_tag(ress)
                 ttt = ress
                 if j2:
-                    print(f"\n[开始合成首句语音]{time.time() - t_t}")
+                    Log.logger.info(f"\n开始合成首句语音：{time.time() - t_t}")
                     for i in range(len(ress)):
                         if ress[i] == "\n" or ress[i] == " ":
                             try:
@@ -276,45 +289,47 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list, tmp_msg_list: list, ev
                     tmp_msg = ""
                 break
 
+    if not event.is_set():
+        if len(tmp_msg) > 0:
+            emotion = get_emotion(tmp_msg)
+            if emotion:
+                if emotion in CConfig.config["extra_ref_audio"]:
+                    ref_audio = CConfig.config["extra_ref_audio"][emotion][0]
+                    ref_text = CConfig.config["extra_ref_audio"][emotion][1]
+            res_msg_list.append([ref_audio, ref_text, tmp_msg])
 
-    if len(tmp_msg) > 0:
-        emotion = get_emotion(tmp_msg)
-        if emotion:
-            if emotion in CConfig.config["extra_ref_audio"]:
-                ref_audio = CConfig.config["extra_ref_audio"][emotion][0]
-                ref_text = CConfig.config["extra_ref_audio"][emotion][1]
-        res_msg_list.append([ref_audio, ref_text, tmp_msg])
+        # 返回完整上下文 
+        res_msg = jionlp.remove_html_tag(res_msg)
+        if len(res_msg) == 0:
+            full_msg.append(res_msg)
+            res_msg_list.append("DONE_DONE")
+            return
+        ttt = ""
+        for i in range(len(res_msg)):
+            if res_msg[i] != "\n" and res_msg[i] != " ":
+                ttt = res_msg[i:]
+                break
+                
+        full_msg.append(ttt)
+        Log.logging.info(f"完整回复：{full_msg[0]}")
 
-    # 返回完整上下文 
-    res_msg = jionlp.remove_html_tag(res_msg)
-    if len(res_msg) == 0:
-        full_msg.append(res_msg)
-        res_msg_list.append("DONE_DONE")
-        return
-    ttt = ""
-    for i in range(len(res_msg)):
-        if res_msg[i] != "\n" and res_msg[i] != " ":
-            ttt = res_msg[i:]
-            break
-            
-    full_msg.append(ttt)
-    print(full_msg)
     # print(res_msg_list)
     res_msg_list.append("DONE_DONE")
     if CConfig.config["Agent"]["is_up"] and len(full_msg[0]) != 0:    # 刷新智能体上下文内容
         agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
 
     # 释放多线程锁
-    if CConfig.config["Agent"]["is_up"]:
-        agent.lock.release()
+    # if CConfig.config["Agent"]["is_up"]:
+    #     agent.lock.release()
 
 def tts(datas: dict):
     res = requests.post(CConfig.config["GSV"]["api"], json=datas, timeout=10)
     if res.status_code == 200:
         return res.content
     else:
-        print(f"[错误]tts语音合成失败！！！")
-        print(datas)
+        Log.logger.warning(f"语音合成失败：{datas}")
+        # print(f"[错误]tts语音合成失败！！！")
+        # print(datas)
         return None
 
 def clear_text(msg: str):
@@ -335,7 +350,7 @@ def to_tts(tts_data: list):
     msg = clear_text(tts_data[2])
     # print(f"[实际输入文本]{tts_data[2]}[tts文本]{msg}")
     if len(msg) == 0:
-        return "None"
+        return
     ref_audio = tts_data[0]
     ref_text = tts_data[1]
     datas = {
@@ -360,7 +375,7 @@ def to_tts(tts_data: list):
         # return audio_b64
         return byte_data
     except:
-        return "None"
+        return
 
 def ttts(res_list: list, audio_list: list, event: Event):
     i = 0
@@ -370,7 +385,6 @@ def ttts(res_list: list, audio_list: list, event: Event):
         if i < len(res_list):
             if res_list[i] == "DONE_DONE":
                 audio_list.append("DONE_DONE")
-                print(f"完成...")
                 break
             # t_t = time.time()
             audio_list.append(to_tts(res_list[i]))
@@ -399,13 +413,14 @@ def asr(audio_data: bytes):
         language="zh", # "zh", "en", "yue", "ja", "ko", "nospeech"
         ban_emo_unk=True,
         use_itn=False,
+        disable_pbar=True,
         # batch_size=200,
     )
     # print(f"{model.model_path}/example/zh.mp3",)
     text = str(rich_transcription_postprocess(res[0]["text"])).replace(" ", "")
     # text = res[0]["text"]
-    print()
-    print(f"[{time.time() - tt}]{text}\n\n")
+    # print()
+    # print(f"[{time.time() - tt}]{text}\n\n")
     if text:
         return text
     return None
@@ -424,15 +439,16 @@ async def text_llm_tts(params: tts_data, start_time):
     res_list = []
     audio_list = []
     full_msg = []
+    tmp_msg = [""]
     if CConfig.config["Agent"]["is_up"]:
         global agent
         t = time.time()
         msg_list = agent.get_msg_data(params.msg[-1]["content"])
-        print(f"[提示]获取上下文耗时：{time.time() - t}")
+        Log.logger.info(f"获取上下文耗时：{time.time() - t}")
     else:
         msg_list = params.msg
     llm_stop = Event()
-    llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, llm_stop, ))
+    llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, tmp_msg, llm_stop, ))
     llm_t.daemon = True
     llm_t.start()
     tts_stop = Event()
@@ -456,7 +472,7 @@ async def text_llm_tts(params: tts_data, start_time):
             # audio = str(audio_list[i])
             # yield str(data)
             if stat:
-                print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
+                Log.logger.info(f"\n服务端首句处理耗时：{time.time() - start_time}\n")
                 stat = False
             yield f"data: {json.dumps(data)}\n\n"
             i += 1
@@ -467,96 +483,86 @@ async def tts_api(params: tts_data):
     return StreamingResponse(text_llm_tts(params, time.time()), media_type="text/event-stream")
 
 
-# 聊天接口v2
 async def text_llm_tts2(params: tts_data, start_time):
     # print(params)
-    tmp_msg_list = [""]
-    tmp_msg_list_len = len(tmp_msg_list[0])
-    res_list = []
-    audio_list = []
-    full_msg = []
+    res_list = []       # 储存需要tts的文本
+    audio_list = []     # 储存合成好的音频
+    full_msg = []       # 储存大模型的完整上下文
+    tmp_list = [""]       # 储存需要返回客户端的文本
+
     if CConfig.config["Agent"]["is_up"]:
         global agent
         t = time.time()
         msg_list = agent.get_msg_data(params.msg[-1]["content"])
-        print(f"[提示]获取上下文耗时：{time.time() - t}")
+        Log.logger.info(f"获取上下文耗时：{time.time() - t}")
     else:
         msg_list = params.msg
     llm_stop = Event()
-    llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, tmp_msg_list, llm_stop, ))
+    llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, tmp_list, llm_stop, ))
     llm_t.daemon = True
     llm_t.start()
     tts_stop = Event()
     tts_t = Thread(target=ttts, args=(res_list, audio_list, tts_stop, ))
     tts_t.daemon = True
     tts_t.start()
-    tts_t.join
 
-    i = 0
+    audio_index = 0     # 标记当前音频索引
+    msg_index = 0       # 标记当前文本索引
     stat = True
-    while True:
-        if i < len(audio_list):
-            if audio_list[i] == "DONE_DONE":
-                break
-        ll = len(tmp_msg_list[0])
-        if ll > tmp_msg_list_len:
-            t_data = {"type": "text", "data": tmp_msg_list[0][tmp_msg_list_len:], "done": False}
-            try:
-                yield f"data: {json.dumps(t_data)}\n\n"
-            except:
-                llm_stop.set()
-                tts_stop.set()
-                break
-            tmp_msg_list_len = ll
-        if i < len(audio_list):
-            # if audio_list[i] == "DONE_DONE":
-            #     data = {"type": "text", "data": full_msg[0], "done": True}
-            #     # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
-            #     #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
-            #     try:
-            #         yield f"data: {json.dumps(data)}\n\n"
-            #     except:
-            #         llm_stop.set()
-            #         tts_stop.set()
-            #         break
-            if audio_list[i] == None:
-                i += 1
-                continue
-            try:
-                audio_bytes = BytesIO(audio_list[i])
-                sampling_rate, data = wavfile.read(audio_bytes)
-                # 计算时长（以秒为单位）
-                duration_seconds = data.shape[0] / float(sampling_rate)
-                # 将时长转换为毫秒
-                duration_milliseconds = duration_seconds * 1000
     
-                audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
-            except Exception as e:
-                print(f"[错误]{e}")
-                i += 1
-                continue
-            data = {"type": "audio", "data": audio_b64, "len": int(duration_milliseconds), "done": False}
-            # audio = str(audio_list[i])
-            # yield str(data)
-            if stat:
-                print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
-                stat = False
-            try:
-                yield f"data: {json.dumps(data)}\n\n"
-            except:
-                llm_stop.set()
-                tts_stop.set()
-                break
-            i += 1
+
+    while True:
         await asyncio.sleep(0.05)
-    data = {"type": "text", "data": full_msg[0], "done": True}
-    # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
-    #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
-    try:
-        yield f"data: {json.dumps(data)}\n\n"
-    except:
-        llm_stop.set()
-        tts_stop.set()
+        if audio_index < len(audio_list):
+            if audio_list[audio_index]:
+                if audio_list[audio_index] == "DONE_DONE":
+                    message = full_msg[0]
+                    data = {"type": "text", "data": message, "done": True}
+                    try:
+                        yield f"data: {json.dumps(data)}\n\n"
+                    except:
+                        break
+                    break
+                try:
+                    message = audio_list[audio_index]
+                    data = {"type": "audio", "data": message, "done": False}
+                    yield f"data: {json.dumps(data)}\n\n"
+                except:
+                    break
+            audio_index += 1
+        ll = len(tmp_list[0])
+        if msg_index < ll:
+            text = tmp_list[0][msg_index:]
+            try:
+                data = json.dumps({"type": "text", "data": text, "done": False})
+                yield f"data: {data}\n\n"
+            except:
+                break
+            msg_index = ll
+        # if i < len(audio_list):
+        #     if audio_list[i] == None:
+        #         continue
+        #     if audio_list[i] == "DONE_DONE":
+        #         data = {"file": None, "message": full_msg[0], "done": True}
+        #         # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
+        #         #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
+        #         yield f"data: {json.dumps(data)}\n\n"
+        #     audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
+        #     data = {"file": audio_b64, "message": res_list[i][2], "done": False}
+        #     # audio = str(audio_list[i])
+        #     # yield str(data)
+        #     if stat:
+        #         print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
+        #         stat = False
+        #     yield f"data: {json.dumps(data)}\n\n"
+        #     i += 1
+    
+    # llm_stop.set()
+    # tts_stop.set()
+    llm_t.join()
+    tts_t.join()
+    # print("[提示]完成...")
+
 @app.post("/api/chat_v2")
 async def tts_api(params: tts_data):
     return StreamingResponse(text_llm_tts2(params, time.time()), media_type="text/event-stream")
@@ -661,21 +667,25 @@ if __name__ == "__main__":
     t2s_weights = CConfig.config["GSV"]["GPT_weight"]
     vits_weights =  CConfig.config["GSV"]["SoVITS_weight"]
     if t2s_weights:
-        print(f"设置GPT_weights...")
+        Log.logger.info(f"设置GPT_weights...")
         params = {
             "weights_path": t2s_weights
         }
         try:
             requests.get(str(CConfig.config["GSV"]["api"]).replace("/tts", "/set_gpt_weights"), params=params)
         except:
-            print(f"设置GPT_weights失败")
+            Log.logger.warning(f"设置GPT_weights失败")
     if vits_weights:
-        print(f"设置SoVITS...")
+        Log.logger.info(f"设置SoVITS...")
         params = {
             "weights_path": vits_weights
         }
         try:
             requests.get(str(CConfig.config["GSV"]["api"]).replace("/tts", "/set_sovits_weights"), params=params)
         except:
-            print(f"设置SoVITS失败")
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+             Log.logger.warning(f"设置SoVITS失败")
+    Thread(target=Socket_asr.start_server, args=("0.0.0.0", 8002, asr_model, ), daemon=True).start()
+    # s_asr = Socket_asr.ImprovedFullDuplexServer(host="0.0.0.0", port=8002, asr_model=asr_model)
+    # Thread(target=s_asr.start_server, args=(), daemon=True).start()
+    # socket_asr_t = Thread(target=)
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_config=None)
