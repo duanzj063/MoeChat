@@ -524,8 +524,9 @@ async def text_llm_tts2(params: tts_data, start_time):
                         break
                     break
                 try:
-                    message = audio_list[audio_index]
-                    data = {"type": "audio", "data": message, "done": False}
+                    # message = audio_list[audio_index]
+                    audio_b64 = base64.urlsafe_b64encode(audio_list[audio_index]).decode("utf-8")
+                    data = {"type": "audio", "data": audio_b64, "done": False}
                     yield f"data: {json.dumps(data)}\n\n"
                 except:
                     break
