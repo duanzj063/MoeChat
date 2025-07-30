@@ -378,6 +378,33 @@ All endpoints use POST requests.
 }
 ```
 
+### Chat Interface V2
+
+```python
+# The chat interface uses SSE streaming. The server slices the LLM response and generates corresponding audio data, returning them to the client in segments.
+# Request format: JSON
+# Place the LLM context data into the `msg` field as a list of strings.
+# Example request:
+{
+  "msg": [
+    {"role": "user", "content": "Hello!"},
+  ]
+}
+
+# Example server response:
+{
+  "type": str     # type of response, text or audio.
+  "data": str     # text or urlsafe base64-encoded audio file
+  "done": False   # boolean indicating whether this is the last data packet
+}
+# he final data packet will include the full LLM response in the `message` field for context concatenation:
+{
+  "type": test
+  "data": str     # full LLM response text for context
+  "done": True    # boolean indicating this is the last data packet
+}
+```
+
 ## Goals
 
 - [x] Create an English version of the README
