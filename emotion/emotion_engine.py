@@ -7,12 +7,11 @@ import json
 import httpx 
 import re
 
-# 下级目录导入计算函数 ---
-from emotion.f_valence_map import f_valence_map
-from emotion.compute_acceptance_ratio import compute_acceptance_ratio
-from emotion.compute_arousal_permission_factor import compute_arousal_permission_factor
-from emotion.create_mood_instruction import create_mood_instruction
-
+# --- 从同级目录（包）下的其他文件中导入计算函数 ---
+from .f_valence_map import f_valence_map
+from .compute_acceptance_ratio import compute_acceptance_ratio
+from .compute_arousal_permission_factor import compute_arousal_permission_factor
+from .create_mood_instruction import create_mood_instruction
 
 
 class EmotionState(Enum):
