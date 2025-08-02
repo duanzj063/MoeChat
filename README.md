@@ -355,7 +355,7 @@ All endpoints use POST requests.
 # The chat interface uses SSE streaming. The server slices the LLM response and generates corresponding audio data, returning them to the client in segments.
 # Request format: JSON
 # Place the LLM context data into the `msg` field as a list of strings.
-# Example request:
+# Request example:
 {
   "msg": [
     {"role": "user", "content": "Hello!"},
@@ -364,13 +364,13 @@ All endpoints use POST requests.
   ]
 }
 
-# Example server response:
+# Server response example:
 {
   "file": str     # urlsafe base64-encoded audio file
   "message": str  # text corresponding to the audio data
   "done": False   # boolean indicating whether this is the last data packet
 }
-# he final data packet will include the full LLM response in the `message` field for context concatenation:
+# The final data packet will include the full LLM response in the `message` field for context concatenation:
 {
   "file": str
   "message": str  # full LLM response text for context
@@ -384,20 +384,20 @@ All endpoints use POST requests.
 # The chat interface uses SSE streaming. The server slices the LLM response and generates corresponding audio data, returning them to the client in segments.
 # Request format: JSON
 # Place the LLM context data into the `msg` field as a list of strings.
-# Example request:
+# Request example:
 {
   "msg": [
     {"role": "user", "content": "Hello!"},
   ]
 }
 
-# Example server response:
+# Server response example:
 {
   "type": str     # type of response, text or audio.
   "data": str     # text or urlsafe base64-encoded audio file
   "done": False   # boolean indicating whether this is the last data packet
 }
-# he final data packet will include the full LLM response in the `message` field for context concatenation:
+# The final data packet will include the full LLM response in the `message` field for context concatenation:
 {
   "type": test
   "data": str     # full LLM response text for context
