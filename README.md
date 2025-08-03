@@ -399,7 +399,7 @@ All endpoints use POST requests.
 }
 # The final data packet will include the full LLM response in the `message` field for context concatenation:
 {
-  "type": test
+  "type": "text"
   "data": str     # full LLM response text for context
   "done": True    # boolean indicating this is the last data packet
 }
