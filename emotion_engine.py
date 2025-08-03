@@ -4,16 +4,15 @@ import math
 import datetime
 from enum import Enum
 import json
-import httpx 
+import httpx
 import re
+import os  # <--- 1. 新增导入 os 模块，用于检查文件是否存在
 
-# 下级目录导入计算函数 ---
+# 下级目录导入计算函数
 from emotion.f_valence_map import f_valence_map
 from emotion.compute_acceptance_ratio import compute_acceptance_ratio
 from emotion.compute_arousal_permission_factor import compute_arousal_permission_factor
 from emotion.create_mood_instruction import create_mood_instruction
-
-
 
 class EmotionState(Enum):
     NORMAL = "正常"
@@ -23,6 +22,7 @@ class EmotionState(Enum):
 class EmotionEngine:
     def __init__(self, agent_config, llm_config):
         print("情绪引擎已启动...")
+        self.STATE_FILE = "emotion_state.json"  # 定义状态文件的路径
         self.FRUSTRATION_THRESHOLD = agent_config.get("FRUSTRATION_THRESHOLD", 10.0)
         self.FRUSTRATION_DECAY_RATE = agent_config.get("FRUSTRATION_DECAY_RATE", 0.95)
         self.MAX_MOOD_AMPLIFICATION_BONUS = agent_config.get("MAX_MOOD_AMPLIFICATION_BONUS", 0.75)
@@ -32,26 +32,73 @@ class EmotionEngine:
         self.llm_api_for_sentiment = llm_config.get("api")
         self.llm_key_for_sentiment = llm_config.get("key")
         self.llm_model_for_sentiment = llm_config.get("model")
+        self.TIME_SCALING_FACTOR = agent_config.get("TIME_SCALING_FACTOR", 5.0)
+
+        # 设置默认情绪状态
         self.valence = 0.0
         self.arousal = 0.0
         self.character_state = EmotionState.NORMAL
         self.latent_emotions = {"frustration": 0.0}
         self.meltdown_start_time = None
-        self.TIME_SCALING_FACTOR = agent_config.get("TIME_SCALING_FACTOR", 5.0)
 
-    # 保留在类内部的、依赖 self 属性的计算函数
+        # 覆盖默认值
+        self._load_state()
+
+    # ave_state 用于保存, _load_state 用于加载
+    def _save_state(self):
+        """将当前情绪状态保存到文件"""
+        state_to_save = {
+            "valence": self.valence,
+            "arousal": self.arousal,
+            "character_state": self.character_state.value,  # Enum 类型保存其字符串值
+            "latent_emotions": self.latent_emotions,
+            
+            "meltdown_start_time": self.meltdown_start_time.isoformat() if self.meltdown_start_time else None,
+        }
+        try:
+            with open(self.STATE_FILE, 'w', encoding='utf-8') as f:
+                json.dump(state_to_save, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"[情绪引擎] 错误: 保存状态失败 - {e}")
+
+    def _load_state(self):
+        """从文件加载情绪状态"""
+        if not os.path.exists(self.STATE_FILE):
+            print("[情绪引擎] 状态文件不存在，使用默认值初始化。")
+            return
+
+        try:
+            with open(self.STATE_FILE, 'r', encoding='utf-8') as f:
+                loaded_state = json.load(f)
+
+            self.valence = loaded_state.get("valence", self.valence)
+            self.arousal = loaded_state.get("arousal", self.arousal)
+            # 从字符串值恢复
+            self.character_state = EmotionState(loaded_state.get("character_state", self.character_state.value))
+            self.latent_emotions = loaded_state.get("latent_emotions", self.latent_emotions)
+
+            # 恢复 datetime 对象
+            meltdown_time_str = loaded_state.get("meltdown_start_time")
+            self.meltdown_start_time = datetime.datetime.fromisoformat(meltdown_time_str) if meltdown_time_str else None
+
+            print(f"[情绪引擎] 成功从文件加载过往情绪状态 (V: {self.valence:.2f}, A: {self.arousal:.2f})。")
+        except Exception as e:
+            print(f"[情绪引擎] 警告: 加载状态失败，将使用默认值。错误: {e}")
+            # 加载失败，则保持 __init__ 中设置的默认值
+
+
     def _update_latent_emotions(self, current_frustration: float, sentiment: str, impact_strength: float, current_valence: float) -> float:
         beta = self.FRUSTRATION_DECAY_RATE
         gamma = 1.0
         eta = 0.5
         new_frustration = beta * current_frustration
         if sentiment == "negative":
-            # 【修改】调用从外部导入的函数
+            # 调用从外部导入的函数
             v_abs = f_valence_map(current_valence)
             mood_bonus = self.MAX_MOOD_AMPLIFICATION_BONUS * (math.exp(v_abs) - 1) / (math.e - 1)
             amplified_impact = impact_strength * (1 + mood_bonus)
             new_frustration += gamma * amplified_impact
-        # 【修改】调用从外部导入的函数
+        # 调用从外部导入的函数
         new_frustration += eta * f_valence_map(current_valence)
         return new_frustration
 
@@ -71,6 +118,7 @@ class EmotionEngine:
 
     # 核心流程函数
     async def _update_emotion_state(self, text: str) -> tuple:
+
         sentiment_system_prompt = (
             "You are a sophisticated social and emotional analysis expert. Your task is to analyze the LATEST user message. "
             "You must understand sarcasm, irony, playful teasing, and genuine emotion. Your response MUST be a single, valid JSON object with four keys: "
@@ -118,13 +166,13 @@ class EmotionEngine:
                 else:
                     impact_strength = (intensity / 8.1) ** 1.1
                     potential_delta = impact_strength if sentiment == "positive" else -impact_strength
-                    # 【修改】调用从外部导入的函数
+
                     acceptance_ratio = compute_acceptance_ratio(self.valence, impact_strength)
                     final_delta = potential_delta * acceptance_ratio
                     new_valence = self.valence + final_delta
                 
                 base_delta_arousal = arousal_impact / 10.0
-                # 【修改】调用从外部导入的函数
+
                 permission_factor = compute_arousal_permission_factor(self.arousal)
                 damped_delta_arousal = base_delta_arousal * permission_factor
                 valence_pull = self._compute_valence_pull(new_valence, arousal_impact)
@@ -142,6 +190,7 @@ class EmotionEngine:
             return self.valence, self.arousal, "neutral", 0.0
 
     async def process_emotion(self, text: str) -> str:
+
         # 状态一：熔断期
         if self.character_state == EmotionState.MELTDOWN:
             elapsed_time = (datetime.datetime.now() - self.meltdown_start_time).total_seconds() / 60.0
@@ -192,5 +241,8 @@ class EmotionEngine:
 
         print(f"[情绪引擎] 状态: {self.character_state.value} | V: {self.valence:.2f}, A: {self.arousal:.2f} | Frustration: {self.latent_emotions['frustration']:.2f}")
 
-        # 【修改】调用从外部导入的函数
+
+        self._save_state()
+
+
         return create_mood_instruction(self.valence, self.arousal)
