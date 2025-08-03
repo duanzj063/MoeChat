@@ -95,7 +95,7 @@ class Agent:
         try:
             with open(f"./data/agents/{self.char}/history.yaml", "r", encoding="utf-8") as f:
                 msg_list = yaml.safe_load(f)
-                self.msg_data += msg_list
+                self.msg_data = msg_list[-CConfig.config["Agent"]["context_length"]:]
                 Log.logger.info(f"当前上下文长度：{len(msg_list)}")
         except:
             pass
@@ -274,8 +274,8 @@ class Agent:
         ttt2.start()
 
         self.msg_data += self.msg_data_tmp
-        if CConfig.config["Agent"]["context_length"]:
-            self.msg_data = self.msg_data[-CConfig.config["Agent"]["context_length"]:]
+        # if CConfig.config["Agent"]["context_length"]:
+        self.msg_data = self.msg_data[-CConfig.config["Agent"]["context_length"]:]
         # write_data = {
         #     "messages": self.msg_data[-60:]
         # }

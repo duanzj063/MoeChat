@@ -24,3 +24,4 @@ uvicorn
 rich
 pysilero
 IPython
+praat-parselmouth

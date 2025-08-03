@@ -461,12 +461,14 @@ async def text_llm_tts(params: tts_data, start_time):
     while True:
         if i < len(audio_list):
             if audio_list[i] == None:
+                i += 1
                 continue
             if audio_list[i] == "DONE_DONE":
                 data = {"file": None, "message": full_msg[0], "done": True}
                 # if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
                 #     agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
                 yield f"data: {json.dumps(data)}\n\n"
+                return
             audio_b64 = base64.urlsafe_b64encode(audio_list[i]).decode("utf-8")
             data = {"file": audio_b64, "message": res_list[i][2], "done": False}
             # audio = str(audio_list[i])
@@ -524,8 +526,9 @@ async def text_llm_tts2(params: tts_data, start_time):
                         break
                     break
                 try:
-                    message = audio_list[audio_index]
-                    data = {"type": "audio", "data": message, "done": False}
+                    # message = audio_list[audio_index]
+                    audio_b64 = base64.urlsafe_b64encode(audio_list[audio_index]).decode("utf-8")
+                    data = {"type": "audio", "data": audio_b64, "done": False}
                     yield f"data: {json.dumps(data)}\n\n"
                 except:
                     break
