@@ -1,4 +1,4 @@
-<div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="/doc/logo1.png" alt="banner" style="zoom:50%;" /></a></div>
+<div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="/doc/logo1.png" alt="banner" style="zoom:10%;" /></a></div>
 <div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="/screen/banner.png" alt="banner" style="zoom:50%;" /></a></div>
 
 <div align="center">
