@@ -48,7 +48,7 @@ def asr(audio_data: bytes, asr_model: AutoModel):
 
 def handle_client(client_socket: socket, asr_model: AutoModel):
     """处理客户端连接，确保完整接收消息"""
-    vad_iterator = VADIterator(speech_pad_ms=500)
+    vad_iterator = VADIterator(speech_pad_ms=300)
     current_speech = []
     current_speech_tmp = []
     status = False
@@ -67,16 +67,13 @@ def handle_client(client_socket: socket, asr_model: AutoModel):
         data = json.loads(data)
         if data["type"] == "asr":
             audio_data = base64.urlsafe_b64decode(str(data["data"]).encode("utf-8"))
-            samples = np.frombuffer(audio_data, dtype=np.float32)
+            samples = np.frombuffer(audio_data, dtype=np.int16)
             current_speech_tmp.append(samples)
-            if len(current_speech_tmp) < 10:
+            if len(current_speech_tmp) < 4:
                 continue
             resampled = np.concatenate(current_speech_tmp.copy())
+            resampled = (resampled / 32768.0).astype(np.float32)
             current_speech_tmp = []
-            resampled = resampled.astype(np.float32)
-            # samples_mono = resampled[:, 0].astype(np.float32)
-            resampled = resample(resampled, 1600)
-            resampled = resampled.astype(np.float32)
             
             for speech_dict, speech_samples in vad_iterator(resampled):
                 if "start" in speech_dict:
@@ -185,8 +182,8 @@ def start_server(host: str, port: int, asr_model: AutoModel):
     finally:
         server_socket.close()
 
-if __name__ == "__main__":
-    start_server()
+# if __name__ == "__main__":
+#     start_server("0.0.0.0", 8002, asr_model)
 
 # class ImprovedFullDuplexServer:
 #     def __init__(self, host: str, port: int, asr_model: AutoModel, ):

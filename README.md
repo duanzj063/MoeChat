@@ -1,5 +1,3 @@
-
-
 <div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="screen/banner.png" alt="banner" style="zoom:50%;" /></a></div>
 
 <div align="center">
@@ -8,17 +6,15 @@
 [![QQ群](https://custom-icon-badges.demolab.com/badge/QQ群-967981851-00BFFF?style=flat&logo=tencent-qq)](https://qm.qq.com/q/6pfdCFxJcc)
 [![BiliBili](https://custom-icon-badges.demolab.com/badge/BiliBili-芙兰蠢兔-FF69B4?style=flat&logo=bilibili)](https://space.bilibili.com/3156308)
 [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)](https://mega.nz/folder/LsZFEBAZ#mmz75Q--hKL6KG9jRNIj1g)
-<!--[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) -->
 
+<!--[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) -->
 
   <a href="/README.md">English</a> |
   <a href="doc/README_zh.md">Chinese</a>
+
 </div>
 
-
 # Voice Interaction System Powered by GPT-SoVITS
-
-
 
 ## Overview
 
@@ -33,48 +29,46 @@ A powerful voice interaction system designed for natural conversations and immer
 - MoeChat delivers the **fastest** and **most precise** long-term memory retrieval across platforms. It supports precise memory queries based on fuzzy time expressions such as "yesterday" or "last week." On a laptop with an Intel 11800H CPU, the total query time averages around 80ms.
 - Moe chat has the ability to selects reference audio dynamically based on emotional context.
 
-  
-
 ## Testing Platform
 
 #### Server site
 
-- OS: Manjaro Linux  
-- CPU: AMD Ryzen 9 5950X  
+- OS: Manjaro Linux
+- CPU: AMD Ryzen 9 5950X
 - GPU: NVIDIA RTX 3080 Ti
 
 #### Client site
 
-- Raspberry Pi 5 
+- Raspberry Pi 5
 
 ### Test Results
 
 ![](screen/img.png)
 
 ## Change log
+
 ### 29.06.2025
 
 - Introduced a brand-new emotion system.
-
 - Added a lightweight web client for MoeChat, supporting emoji particle effects and other visual effects triggered by keywords.
 
   > [!NOTE]
   >
   > Moechat detects only keywords in Chinese right now, updates coming soon.
-  
+  >
+
   <div style="text-align: left;"><img src="screen/sample1.png" alt="sample1" style="zoom: 55%;" /></div>
 
 ### 2025.06.11
+
 - Added **Character Template** support: allows creating AI character using built-in prompt templates.
-
 - Introduced a **Journal System** (long-term memory): the AI can now retain full conversation history and perform accurate time-based queries like “what did we talk about yesterday?” or “where did we go last week?”, avoiding the typical temporal limitations of vector databases.
-
 - Introduced **Core Memory**: the AI can remember key facts, user preferences, and personal memories.
 
   > [!NOTE]
   >
   > These features require the Character Template functionality to be enabled.
-
+  >
 - Decoupled from the original GPT-SoVITS codebase; switched to using external API calls.
 
 ### 2025.05.13
@@ -84,9 +78,10 @@ A powerful voice interaction system designed for natural conversations and immer
 - various bugs fixed .
 
 ## Usage Guide
+
 You can download the full package here -> [![Mega](https://custom-icon-badges.demolab.com/badge/Mega-Moechat-FF5024?style=flat&logo=mega&logoColor=red)]([https://github.com/AlfreScarlet/MoeChat](https://mega.nz/folder/LsZFEBAZ#mmz75Q--hKL6KG9jRNIj1g))
 
-<!--Join our Discord server to discuss：[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7)--> 
+<!--Join our Discord server to discuss：[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7)-->
 
 However, You are encourage to fork your own copy from [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS) or download a release from there..
 
@@ -95,11 +90,8 @@ However, You are encourage to fork your own copy from [GPT-Sovits](https://githu
 ##### Launching the GPT-SoVITS server
 
 1. Place your `GPT-SoVITS` folder alongside your MoeChat directory for convenience.
-
 2. Open a terminal in the `GPT-SoVITS-version_name` folder.
-
 3. Ensure that `api_v2.py` exists in the root of that directory.
-
 4. Run the following command to launch the API server of [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS)
 
 ```bash
@@ -107,14 +99,13 @@ runtime\python.exe api_v2.py
 ```
 
 ##### launch MoeChat server
+
 1. lauch Moechat server at root directory of Moechat.
 2. Run the following command.
 
 ```bash
 GPT-SoVITS-version_name\runtime\python.exe chat_server.py
 ```
-
-
 
 ### Linux (Ubuntu / Debian / Linux Mint)
 
@@ -166,7 +157,7 @@ To apply the changes, either close and reopen your terminal, or run the followin
 source ~/.bashrc
 ```
 
-#####  Create Your Python Environment
+##### Create Your Python Environment
 
 Now it's time to create your environment.
 
@@ -176,13 +167,11 @@ Now it's time to create your environment.
    ```bash
    pyenv install 3.10.13
    ```
-
 2. Create a virtual environment named `moechat310` (or any name you like) based on the Python version you just installed.
 
    ```bash
    pyenv virtualenv 3.10.13 moechat310
    ```
-
 3. Your environment has been successfully created. You can now activate and use it from any directory using following command.
 
    ```bash
@@ -202,14 +191,12 @@ Now it's time to create your environment.
    ```bash
    pyenv activate moechat310
    ```
-
 2. Then, use the `cd` command to navigate to your project directory — the one that contains the `requirements.txt` file.
 
    ```bash
    # Example: navigate to your project directory
    cd ~/your_own_path/moechat
    ```
-
 3. Use `pip` to install all the dependencies listed in `requirements.txt`.
 
    ```bash
@@ -221,7 +208,7 @@ Now it's time to create your environment.
    > [!NOTE]
    >
    > Note that, you should install both requirement from [GPT-Sovits](https://github.com/RVC-Boss/GPT-SoVITS) and Moechat. You can run the `pip install -r` command for each file.
-
+   >
 4. You can verify if the packages were successfully installed in the current environment.
 
    ```bash
@@ -229,14 +216,12 @@ Now it's time to create your environment.
    pip list
    ```
 
-   
-
 ## Basic Client Guide
 
 ### Windows
 
-Tested with Python 3.10. 
-If you want to run the server and client separately (e.g. access the server remotely),  
+Tested with Python 3.10.
+If you want to run the server and client separately (e.g. access the server remotely),
 you can modify the IP address in lines 17 and 18 of the `client-gui/src/client_utils.py` file.
 
 ##### Simple GUI Client
@@ -342,6 +327,7 @@ All endpoints use POST requests.
 ```python
 # URL: /api/asr
 # Request Format: application/json
+# Audio format is WAV with a sample rate of 16000, 16-bit depth, mono channel, and a frame length of 20ms.
 # Encode the audio data as a URL-safe Base64 string and place it in the data field of the JSON body.
 {
   "data": str # base64-encoded audio data
@@ -407,7 +393,7 @@ All endpoints use POST requests.
 
 ## Goals
 
-- [x] Create an English version of the README
+- [X] Create an English version of the README
 - [ ] Improve and optimize response speed on the web client
 - [ ] Integrate Live2D-widget into the web client
 - [ ] Develop self-awareness and digital life capabilities for the LLM
@@ -415,4 +401,3 @@ All endpoints use POST requests.
 - [ ] Integrate 3D models into the client and enable full projection
 - [ ] Control Live2D model's expressions and actions based on AI's emotions and actions
 - [ ] Control 3D model's expressions and actions based on AI's emotions and actions
-
