@@ -9,8 +9,8 @@
 
 <!--[![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7) -->
 
-  `<a href="/README.md">`English`</a>` |
-  `<a href="doc/README_zh.md">`Chinese`</a>`
+  <a href="/README.md">English</a> |
+  <a href="doc/README_zh.md">Chinese</a>
 
 </div>
 
