@@ -1,8 +1,4 @@
-
-
 <div align="center"><a href="https://github.com/AlfreScarlet/MoeChat"><img src="/screen/banner.png" alt="banner" style="zoom:50%;" /></a></div>
-
-
 
 <div align="center">
 
@@ -11,17 +7,12 @@
 [![BiliBili](https://custom-icon-badges.demolab.com/badge/BiliBili-芙兰蠢兔-FF69B4?style=flat&logo=bilibili)](https://space.bilibili.com/3156308)
 [![Discord](https://custom-icon-badges.demolab.com/badge/Discord-Moechat-FF5024?style=flat&logo=Discord)](https://discord.gg/2JJ6J2T9P7)
 
+  `<a href="/README.md">`English`</a>` |
+  `<a href="doc/README_zh.md">`Chinese`</a>`
 
-  <a href="/README.md">English</a> |
-  <a href="doc/README_zh.md">Chinese</a>
 </div>
 
-
-
-
 # 基于GPT-SoVITS的语音交互系统
-
-
 
 ## 简介
 
@@ -35,10 +26,6 @@
 - Linux环境下首Token延迟基本能做到1.5s以内。Windows环境下延迟在2.1s左右。
 - Moechat项目拥有全站**最快**、**最精准**的长期记忆查询，可根据如“昨天”、“上周”这样的模糊的时间范围精确查询记忆，在11800h CPU的笔记本上测试，查询总耗时仅为80ms左右。
 - 根据情绪选择对应的参考音频。
-
-  
-
-  
 
 ## 测试平台
 
@@ -57,23 +44,21 @@
 ![](/screen/img.png)
 
 ## 更新日志
+
 ### 2025.06.29
 
 - 设计了全新的情绪系统。
-
 - 为Moechat添加了简易的web端，可以识别关键词进行表情飘屏，和其他例子特效。
 
   <div style="text-align: left;"><img src="/screen/sample1.png" alt="sample1" style="zoom: 55%;" /></div>
 
 ### 2025.06.11
+
 - 增加角色模板功能：可以使用内置提示词模板创建角色。
-
 - 增加日记系统（长期记忆：AI可以记住所有的聊天内容，并且可以使用像”昨天聊了什么“、”上周去了哪里“和”今天中午吃了什么“这样的语句进行基于时间范围的精确查询，不会像传统向量数据库那样因为时间维度而丢失记忆。
-
 - 增加核心记忆功能：AI可以记住关于用户的重要回忆、信息和个人喜好。
 
   上述功均需要启用角色模板功能
-
 - 脱离原有的GPT-SoVITS代码，改为API接口调用
 
 ### 2025.05.13
@@ -83,6 +68,7 @@
 - 修复了一些bug。
 
 ## 整合包使用说明
+
 网盘下载链接：[![BaiduPan](https://img.shields.io/badge/百度网盘-下载链接-blue?logo=baidu&logoColor=white&style=flat-square)](https://pan.baidu.com/share/init?surl=mf6hHJt8hVW3G2Yp2gC3Sw&pwd=2333)
 
 其他下载方式可进群获取：[![QQ](https://img.shields.io/badge/QQ群-967981851-blue?logo=tencentqq&style=flat-square)](https://qm.qq.com/q/6pfdCFxJcc)
@@ -233,6 +219,7 @@ Agent:
 ```python
 # url为/api/asr
 # 请求数据格式为json
+# 音频格式为wav，16kzh采样率，int16深度，单声道，每帧长度20ms
 # 将音频数据编码成urlsafe的base64字符串，放进请求体data字段中
 {
   "data": str # base64音频数据
@@ -298,7 +285,7 @@ Agent:
 
 ## 目标
 
-- [x] 制作英文版Readme
+- [X] 制作英文版Readme
 - [ ] 网页端的相应提速与优化
 - [ ] 网页端加入Live2d-widget
 - [ ] 大语言模型的自我认知与数字生命
@@ -306,4 +293,3 @@ Agent:
 - [ ] 客户端接入3d模型并实现全系投影
 - [ ] 用AI的情绪和动作控制live2d模型的表情和动作
 - [ ] 用AI的情绪和动作控制3d模型的表情和动作
-
