@@ -587,7 +587,7 @@ async def websocket_endpoint(c_websocket: WebSocket):
     # state = np.zeros((2, 1, 128), dtype=np.float32)
     # sr = np.array(16000, dtype=np.int64)
     # 初始化 VAD 迭代器，指定采样率为 16000Hz
-    vad_iterator = VADIterator(speech_pad_ms=270)
+    vad_iterator = VADIterator(speech_pad_ms=300)
     current_speech = []
     current_speech_tmp = []
     status = False
@@ -597,15 +597,13 @@ async def websocket_endpoint(c_websocket: WebSocket):
             data = json.loads(data)
             if data["type"] == "asr":
                 audio_data = base64.urlsafe_b64decode(str(data["data"]).encode("utf-8"))
-                samples = np.frombuffer(audio_data, dtype=np.float32)
+                samples = np.frombuffer(audio_data, dtype=np.int16)
                 current_speech_tmp.append(samples)
-                if len(current_speech_tmp) < 9:
+                if len(current_speech_tmp) < 4:
                     continue
                 resampled = np.concatenate(current_speech_tmp.copy())
+                resampled = (resampled / 32768.0).astype(np.float32)
                 current_speech_tmp = []
-                # resampled = resample(samples, 1600)
-                resampled = resample(resampled, 1600)
-                resampled = resampled.astype(np.float32)
 
                 for speech_dict, speech_samples in vad_iterator(resampled):
                     if "start" in speech_dict:
@@ -634,8 +632,6 @@ async def websocket_endpoint(c_websocket: WebSocket):
                             res_text = asr(audio_bytes)
                             if res_text:
                                 await c_websocket.send_text(res_text)
-                            else:
-                                await c_websocket.send_text("None")
                         current_speech = []  # 清空当前段落
 
         except:
