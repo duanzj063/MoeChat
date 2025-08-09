@@ -14,6 +14,7 @@ from utilss.sv import SV
 from utilss.agent import Agent
 import re
 import jionlp
+from plugins.financial.plugin import financial_plugin_hook
 
 
 if CConfig.config["Agent"]["is_up"]:
@@ -294,44 +295,152 @@ def asr(params: str):
         return text
     return None
 
+# 新增函数处理prompt
+def _create_llm_prompt_for_financial_task(plugin_result: dict, original_msg_history: list) -> list:
+    """
+    根据插件返回结果，创建用于LLM润色的新Prompt。
+    这是一个辅助函数，专门为财务任务生成给LLM的指令。
+    """
+    
+    llm_context = plugin_result.get('llm_context', {})
+    suggestion = llm_context.get('suggestion_for_llm', '')
+    
+
+    if plugin_result['status'] == 'success':
+        system_prompt = (
+            "一个财务插件刚刚成功处理了一笔用户的交易。"
+            "你的任务是：基于插件提供的'任务总结'和'详细数据'，生成一句自然、友好、符合你人设的确认消息给用户。"
+            "请不要重复数据，而是用口语化的方式进行确认和反馈。"
+            f"任务总结: {suggestion}\n"
+            f"详细数据: {json.dumps(llm_context.get('transaction_info', {}), ensure_ascii=False)}"
+        )
+    elif plugin_result['status'] == 'incomplete':
+        system_prompt = (
+            "一个财务插件发现用户的记账信息不完整，需要向用户提问以补全信息。"
+            "你的任务是：基于插件提供的'提问建议'，生成一句自然、友好、符合你人设的问句来引导用户。"
+            f"提问建议: {suggestion}\n"
+            f"已提取的信息: {json.dumps(llm_context.get('extracted_info', {}), ensure_ascii=False)}"
+        )
+    else:
+        # 
+        system_prompt = "请基于以下信息和用户对话。"
+
+    # 将这个特殊的系统提示和用户的对话历史结合起来，构成完整的上下文
+    # 我们将系统提示放在历史消息的最前面，以指导LLM的后续行为
+    final_prompt_list = [{"role": "system", "content": system_prompt}] + original_msg_history
+    
+    return final_prompt_list
+
 
 class tts_data(BaseModel):
     msg: list
 
 async def text_llm_tts(params: tts_data, start_time):
-        # print(params)
-        res_list = []
-        audio_list = []
-        full_msg = []
+    # ================== 1. 统一的消息准备阶段 ==================
+    
+    # 初始化将要传递给LLM的最终消息列表
+    msg_list_for_llm = []
+    
+    # 检查MoeChat总配置文件中的插件开关
+    is_balancer_enabled = CConfig.config.get('Plugins', {}).get('Balancer', {}).get('enabled', False)
+
+    if is_balancer_enabled:
+        # 插件已启用，进入插件处理流程
+        session_id = "user_main_session"  # 关键点：实际应用中这里应该是动态的、每个用户唯一的ID
+        user_message = params.msg[-1]["content"]
+
+        print(f"[插件钩子] 正在处理消息: '{user_message}'")
+        plugin_result = financial_plugin_hook(user_message, session_id)
+        print(f"[插件钩子] 返回结果: \n{json.dumps(plugin_result, indent=2, ensure_ascii=False)}")
+
+        if plugin_result['financial_detected']:
+            # 只要检测到财务意图（无论成功与否），就调用辅助函数为LLM创建新的、带有指导的Prompt
+            print("[决策] 检测到财务意图，正在为LLM创建润色任务...")
+            msg_list_for_llm = _create_llm_prompt_for_financial_task(plugin_result, params.msg)
+    
+    # 如果经过插件处理后，msg_list_for_llm 列表仍然为空
+    # (这说明插件被禁用，或者插件判断当前消息与财务无关)
+    # 则执行MoeChat原来的常规聊天逻辑来填充它。
+    if not msg_list_for_llm:
+        print("[决策] 非财务消息或插件禁用，进入常规聊天流程。")
         if CConfig.config["Agent"]["is_up"]:
             global agent
             t = time.time()
-            msg_list = agent.get_msg_data(params.msg[-1]["content"])
+            msg_list_for_llm = agent.get_msg_data(params.msg[-1]["content"])
             print(f"[提示]获取上下文耗时：{time.time() - t}")
         else:
-            msg_list = params.msg
-        llm_t = Thread(target=to_llm, args=(msg_list, res_list, full_msg, ))
-        llm_t.daemon = True
-        llm_t.start()
-        tts_t = Thread(target=ttts, args=(res_list, audio_list, ))
-        tts_t.daemon = True
-        tts_t.start()
+            msg_list_for_llm = params.msg
+            
+    # ================== 2. 统一的LLM和TTS处理阶段 ==================
+    # 无论消息来自插件包装还是常规聊天，最终都汇入到这里，使用同一套处理流水线
+    
+    res_list = []
+    audio_list = []
+    full_msg = []
+    
+    print("[核心流程] 已将最终Prompt送入LLM和TTS处理流水线。")
+    
+    # 将最终构建好的消息列表(msg_list_for_llm)传递给 to_llm 线程
+    llm_t = Thread(target=to_llm, args=(msg_list_for_llm, res_list, full_msg, ))
+    llm_t.daemon = True
+    llm_t.start()
+    
+    tts_t = Thread(target=ttts, args=(res_list, audio_list, ))
+    tts_t.daemon = True
+    tts_t.start()
 
-        i = 0
-        stat = True
-        while True:
-            if i < len(audio_list):
-                if audio_list[i] == "DONE_DONE":
-                    data = {"file": None, "message": full_msg[0], "done": True}
-                    if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
-                        agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
-                    yield f"data: {json.dumps(data)}\n\n"
-                data = {"file": audio_list[i], "message": res_list[i][2], "done": False}
-                # audio = str(audio_list[i])
-                # yield str(data)
-                if stat:
-                    print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
-                    stat = False
+    # ================== 3. 统一的流式返回阶段 (这部分代码来自您的原始版本，保持不变) ==================
+    i = 0
+    stat = True
+    emotion_processed = False  # 标记是否已处理表情包
+    
+    while True:
+        if i < len(audio_list):
+            if audio_list[i] == "DONE_DONE":
+                # === 新增：在对话结束前处理表情包 ===
+                if not emotion_processed and len(full_msg) > 0 and full_msg[0]:
+                    try:
+                        # 导入表情包系统（延迟导入避免循环依赖）
+                        from meme_system import get_emotion_service
+                        
+                        # 获取表情包服务实例
+                        emotion_service = get_emotion_service()
+                        if not emotion_service.is_healthy():
+                            print("[表情包系统] 初始化表情包服务...")
+                            emotion_service.initialize()
+                        
+                        # 处理LLM回复，获取表情包响应
+                        meme_sse_response = emotion_service.process_llm_response(full_msg[0])
+                        
+                        if meme_sse_response:
+                            print("[表情包系统] 发送表情包到前端")
+                            yield meme_sse_response
+                        else:
+                            print("[表情包系统] 本次不发送表情包")
+                            
+                    except ImportError:
+                        print("[表情包系统] 表情包模块未安装，跳过表情包处理")
+                    except Exception as e:
+                        print(f"[表情包系统] 处理表情包时发生错误：{e}")
+                    
+                    emotion_processed = True
+                # =======================================
+                
+                # 发送结束信号
+                data = {"file": None, "message": full_msg[0], "done": True}
+                if CConfig.config["Agent"]["is_up"]:    # 刷新智能体上下文内容
+                    agent.add_msg(re.sub(r'<.*?>', '', full_msg[0]).strip())
                 yield f"data: {json.dumps(data)}\n\n"
-                i += 1
-            await asyncio.sleep(0.05)
+                break  # 结束循环
+            
+            # 发送音频和文本数据
+            data = {"file": audio_list[i], "message": res_list[i][2], "done": False}
+            
+            if stat:
+                print(f"\n[服务端首句处理耗时]{time.time() - start_time}\n")
+                stat = False
+            
+            yield f"data: {json.dumps(data)}\n\n"
+            i += 1
+        
+        await asyncio.sleep(0.05)
