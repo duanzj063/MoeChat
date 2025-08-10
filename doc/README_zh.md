@@ -1,6 +1,6 @@
-<p align="left"><img src="/home/tenzray/moechat linux/MoeChat-apple-20250719/screen/logo1.png" alt="logo1" style="zoom:10%;" /></p>
+<p align="left"><img src="/screen/logo1.png" alt="logo1" style="zoom:20%;" /></p>
 
-![banner](/home/tenzray/moechat linux/MoeChat-apple-20250719/screen/banner.png)
+![banner](/screen/banner.png)
 
 
 
@@ -51,11 +51,11 @@
 
 - Moechat现在可以发送表情包了。
 
-  <p align="left"><img src="screen/sample2.png" alt="image-20250810165346882" style="zoom: 33%;" /></p>
+  <p align="left"><img src="/screen/sample2.png" alt="image-20250810165346882" style="zoom: 33%;" /></p>
 
 - 添加了简单的财务系统，使用复式记账。
 
-  <p align="left"><img src="screen/sample_booking_zh.png" alt="sample_booking_en" style="zoom: 50%;" /></p>
+  <p align="left"><img src="/screen/sample_booking_zh.png" alt="sample_booking_zh" style="zoom: 50%;" /></p>
 
 ### 2025.06.29
 
