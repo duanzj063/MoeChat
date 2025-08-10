@@ -55,7 +55,7 @@ A powerful voice interaction system designed for natural conversations and immer
 
 - Added a simple financial system using double-entry bookkeeping.
 
-  <p align="left"><img src="/home/tenzray/moechat linux/MoeChat-apple-20250719/screen/sample_booking_en.png" alt="sample_booking_en" style="zoom: 50%;" /></p>
+  <p align="left"><img src="screen/sample_booking_en.png" alt="sample_booking_en" style="zoom: 50%;" /></p>
 
 ### 29.06.2025
 
