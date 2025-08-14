@@ -4,10 +4,18 @@ Core:
     is_up: false
     master_audio: test.wav    # 包含你声音的wav音频文件，建议3s-5s左右。
     thr:                      # 阈值，越小越敏感，建议0.5-0.8之间，实测好像不是很有用？
+ASR:
+  use_remote: false          # 是否使用远程ASR服务
+  remote_api: ""            # 远程ASR API地址
+  api_key: ""               # 远程ASR API密钥
+  model: ""                 # 远程ASR模型名称
+  language: "zh"           # 语言设置
+  local_model_path: "./utilss/models/SenseVoiceSmall"  # 本地模型路径
+  device: "cuda:0"          # 设备设置
 LLM:
-  api: ""
-  key: ""
-  model: ""
+  api: "http://27.159.93.61:7866/v1/chat/completions"
+  key: "1"
+  model: "Qwen3-30B-A3B-Instruct-2507-FP8"
   extra_config:               # 大模型API额外参数，如：temperature: 0.7，温度参数
 
 GSV:
@@ -71,4 +79,20 @@ Agent:
     使用口语的文字风格进行对话，不要太啰嗦。
 
   # 开场白，数组形式。用于创建开场内容，填入用户与AI的对话内容，只能填入用户和Ai的对话内容，开场白会直接被插入到上下文的开头。
-  start_with: 
+  start_with:
+
+# 天气查询功能配置
+HeWeather:
+  Is_on: true                 # 是否启用天气查询功能
+
+# 网络图片搜索功能配置
+get_image:
+  enabled: true               # 是否启用网络图片搜索功能
+
+# 表情包功能配置
+Memes:
+  turn_on: true               # 是否启用表情包功能
+
+# 本地图片分享功能配置
+Pics:
+  turn_on: true               # 是否启用本地图片分享功能

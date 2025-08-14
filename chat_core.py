@@ -12,6 +12,7 @@ from funasr import AutoModel
 from funasr.utils.postprocess_utils import rich_transcription_postprocess
 from utilss.sv import SV
 from utilss.agent import Agent
+from utilss.asr_remote import init_asr, transcribe_audio
 import re
 import jionlp
 from plugins.financial.plugin import financial_plugin_hook
@@ -20,28 +21,43 @@ from plugins.financial.plugin import financial_plugin_hook
 if CConfig.config["Agent"]["is_up"]:
     agent = Agent()
 
-try:
-    model_dir = "./utilss/models/SenseVoiceSmall"
-    asr_model = AutoModel(
-        model=model_dir,
-        disable_update=True,
-        device="cuda:0",
-    )
-except:
-    print("[提示]未安装ASR模型，开始自动安装ASR模型。")
-    from modelscope import snapshot_download
-    model_dir = snapshot_download(
-        model_id="iic/SenseVoiceSmall",
-        local_dir="./utilss/models/SenseVoiceSmall",
-        revision="master"
-    )
-    model_dir = "./utilss/models/SenseVoiceSmall"
-    asr_model = AutoModel(
-        model=model_dir,
-        disable_update=True,
-        # device="cuda:0",
-        device="cpu",
-    )
+# 初始化ASR系统
+asr_model = None
+if CConfig.config["ASR"].get("use_remote", False):
+    # 使用远程ASR服务
+    print("[提示]使用远程ASR服务")
+    try:
+        init_asr(CConfig.config["ASR"])
+        asr_model = "remote"  # 标记为远程模式
+    except Exception as e:
+        print(f"[错误]远程ASR初始化失败: {e}")
+        print("[提示]回退到本地ASR模型")
+        CConfig.config["ASR"]["use_remote"] = False
+else:
+    # 使用本地ASR模型
+    print("[提示]使用本地ASR模型")
+    try:
+        model_dir = CConfig.config["ASR"].get("local_model_path", "./utilss/models/SenseVoiceSmall")
+        device = CConfig.config["ASR"].get("device", "cuda:0")
+        asr_model = AutoModel(
+            model=model_dir,
+            disable_update=True,
+            device=device,
+        )
+    except:
+        print("[提示]未安装ASR模型，开始自动安装ASR模型。")
+        from modelscope import snapshot_download
+        model_dir = snapshot_download(
+            model_id="iic/SenseVoiceSmall",
+            local_dir="./utilss/models/SenseVoiceSmall",
+            revision="master"
+        )
+        model_dir = "./utilss/models/SenseVoiceSmall"
+        asr_model = AutoModel(
+            model=model_dir,
+            disable_update=True,
+            device="cpu",
+        )
 
 # 载入声纹识别模型
 sv_pipeline = ""
@@ -262,6 +278,34 @@ def ttts(res_list: list, audio_list: list):
         time.sleep(0.05)
 
 
+# 重新加载ASR配置
+def reload_asr_config():
+    """重新加载ASR配置"""
+    global asr_model
+    try:
+        if CConfig.config["ASR"].get("use_remote", False):
+            # 使用远程ASR服务
+            print("[提示]重新加载远程ASR服务")
+            from utilss.asr_remote import init_asr
+            init_asr(CConfig.config["ASR"])
+            asr_model = "remote"  # 标记为远程模式
+        else:
+            # 使用本地ASR模型
+            print("[提示]重新加载本地ASR模型")
+            model_dir = CConfig.config["ASR"].get("local_model_path", "./utilss/models/SenseVoiceSmall")
+            device = CConfig.config["ASR"].get("device", "cuda:0")
+            asr_model = AutoModel(
+                model=model_dir,
+                disable_update=True,
+                device=device,
+            )
+        print("[提示]ASR配置重新加载成功")
+        return True
+    except Exception as e:
+        print(f"[错误]ASR配置重新加载失败: {e}")
+        return False
+
+
 # asr功能
 def asr(params: str):
     global asr_model
@@ -274,26 +318,40 @@ def asr(params: str):
     if is_sv:
         if not sv_pipeline.check_speaker(audio_data):
             return None
-    # with open(f"./tmp/{tt}.wav", "wb") as file:
-    #     file.write(audio_data)
-    audio_data = BytesIO(audio_data)
-    res = asr_model.generate(
-        input=audio_data,
-        # input=f"{model.model_path}/example/zh.mp3",
-        cache={},
-        language="zh", # "zh", "en", "yue", "ja", "ko", "nospeech"
-        ban_emo_unk=True,
-        use_itn=False,
-        # batch_size=200,
-    )
-    # print(f"{model.model_path}/example/zh.mp3",)
-    text = str(rich_transcription_postprocess(res[0]["text"])).replace(" ", "")
-    # text = res[0]["text"]
-    print()
-    print(f"[{time.time() - tt}]{text}\n\n")
-    if text:
-        return text
-    return None
+    
+    # 判断使用远程还是本地ASR
+    if asr_model == "remote":
+        # 使用远程ASR服务
+        try:
+            text = transcribe_audio(audio_data)
+            print()
+            print(f"[远程ASR {time.time() - tt}]{text}\n\n")
+            if text:
+                return text
+            return None
+        except Exception as e:
+            print(f"[远程ASR错误] {e}")
+            return None
+    else:
+        # 使用本地ASR模型
+        audio_data = BytesIO(audio_data)
+        res = asr_model.generate(
+            input=audio_data,
+            # input=f"{model.model_path}/example/zh.mp3",
+            cache={},
+            language="zh", # "zh", "en", "yue", "ja", "ko", "nospeech"
+            ban_emo_unk=True,
+            use_itn=False,
+            # batch_size=200,
+        )
+        # print(f"{model.model_path}/example/zh.mp3",)
+        text = str(rich_transcription_postprocess(res[0]["text"])).replace(" ", "")
+        # text = res[0]["text"]
+        print()
+        print(f"[本地ASR {time.time() - tt}]{text}\n\n")
+        if text:
+            return text
+        return None
 
 # 新增函数处理prompt
 def _create_llm_prompt_for_financial_task(plugin_result: dict, original_msg_history: list) -> list:

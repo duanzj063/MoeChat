@@ -1,0 +1,5 @@
+.venv/
+.venv
+__pycache__
+utilss/models
+data/agents

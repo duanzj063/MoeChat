@@ -12,6 +12,15 @@ config = {
       "thr": ""
     }
   },
+  "ASR": {
+    "use_remote": False,
+    "remote_api": "",
+    "api_key": "",
+    "model": "",
+    "language": "zh",
+    "local_model_path": "./utilss/models/SenseVoiceSmall",
+    "device": "cuda:0"
+  },
   "LLM": {
     "api": "",
     "key": "",
@@ -68,6 +77,14 @@ config_tmp = '''Core:
     is_up: false
     master_audio: test.wav    # 包含你声音的wav音频文件，建议3s-5s左右。
     thr:                      # 阈值，越小越敏感，建议0.5-0.8之间，实测好像不是很有用？
+ASR:
+  use_remote: false          # 是否使用远程ASR服务
+  remote_api: ""            # 远程ASR API地址
+  api_key: ""               # 远程ASR API密钥
+  model: ""                 # 远程ASR模型名称
+  language: "zh"           # 语言设置
+  local_model_path: "./utilss/models/SenseVoiceSmall"  # 本地模型路径
+  device: "cuda:0"          # 设备设置
 LLM:
   api: ""
   key: ""
