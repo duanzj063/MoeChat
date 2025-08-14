@@ -61,7 +61,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, RedirectResponse
 from pydantic import BaseModel
 import chat_core
 from external_server import router as models_router
@@ -79,6 +79,16 @@ app.add_middleware(
 )
 app.include_router(models_router, prefix="/web")
 app.mount("/web/static", StaticFiles(directory="./web/static"), name="/web/static")
+
+# 根路径重定向到web界面
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/web/")
+
+# favicon重定向
+@app.get("/favicon.ico")
+async def favicon():
+    return RedirectResponse(url="/web/static/Moechat_text.png")
 
 
 # 聊天接口

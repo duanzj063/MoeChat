@@ -159,6 +159,28 @@ body {
   transform: scale(0.95) !important;
 }
 
+.record-button.recording, #recordBtn.recording {
+  background: linear-gradient(45deg, #ff4757, #ff3838) !important;
+  box-shadow: 0 4px 15px rgba(255, 71, 87, 0.5) !important;
+  animation: pulse 1s infinite !important;
+}
+
+.record-button.recording:before, #recordBtn.recording:before {
+  content: '🔴' !important;
+  animation: blink 1s infinite !important;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.3; }
+}
+
 /* 输入组 */
 .input-group {
   display: flex;

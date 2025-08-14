@@ -244,46 +244,55 @@ if (
   function handleBlob(blob) {
     if (isHandling) return;
     isHandling = true;
+    console.log("开始处理音频数据，blob大小:", blob.size);
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64AudioWithHeader = reader.result;
+      console.log("音频数据转换为base64完成，开始发送到服务器");
       recordBtn.disabled = true;
-      const res = await fetch('/web/audio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audio: base64AudioWithHeader })
-      });
-      const result = await res.json();
-      recordBtn.disabled = false;
-      if (!result.text || result.text === 'null') {
-        isHandling = false;
-        return;
-      }
-      appendMessage("user", result.text);
-      if (currentEventSource) currentEventSource.close();
-      lastBotMessageDiv = null;
-      currentEventSource = new EventSource('/web/stream_chat?text=' + encodeURIComponent(result.text));
-      currentEventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.done) {
-          currentEventSource.close();
-          currentEventSource = null;
+      try {
+        const res = await fetch('/web/audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audio: base64AudioWithHeader })
+        });
+        const result = await res.json();
+        console.log("服务器返回结果:", result);
+        recordBtn.disabled = false;
+        if (!result.text || result.text === 'null') {
           isHandling = false;
           return;
         }
-        if (data.file && typeof data.file === 'string' && data.file.length > 20) {
-          enqueueAudio(data.file);
-        }
-        if (data.message && typeof data.message === 'string') {
-          appendMessage("bot", data.message, true);
-        }
-      };
-      currentEventSource.onerror = (err) => {
-        console.error('SSE error:', err);
+        appendMessage("user", result.text);
         if (currentEventSource) currentEventSource.close();
-        currentEventSource = null;
+        lastBotMessageDiv = null;
+        currentEventSource = new EventSource('/web/stream_chat?text=' + encodeURIComponent(result.text));
+        currentEventSource.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.done) {
+            currentEventSource.close();
+            currentEventSource = null;
+            isHandling = false;
+            return;
+          }
+          if (data.file && typeof data.file === 'string' && data.file.length > 20) {
+            enqueueAudio(data.file);
+          }
+          if (data.message && typeof data.message === 'string') {
+            appendMessage("bot", data.message, true);
+          }
+        };
+        currentEventSource.onerror = (err) => {
+          console.error('SSE error:', err);
+          if (currentEventSource) currentEventSource.close();
+          currentEventSource = null;
+          isHandling = false;
+        };
+      } catch (error) {
+        console.error("音频处理错误:", error);
+        recordBtn.disabled = false;
         isHandling = false;
-      };
+      }
     };
     reader.readAsDataURL(blob);
   }
@@ -294,89 +303,107 @@ if (
       audioChunks = [];
       mediaRecorder.start();
       recording = true;
+      recordBtn.classList.add('recording');
     }
   });
   recordBtn.addEventListener('mouseup', () => {
     if (recording) {
       mediaRecorder.stop();
       recording = false;
+      recordBtn.classList.remove('recording');
     }
   });
-  recordBtn.addEventListener('touchstart', () => {
+  recordBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault(); // 防止默认行为
     if (!recording) {
       audioChunks = [];
       mediaRecorder.start();
       recording = true;
+      recordBtn.classList.add('recording');
     }
   });
-  recordBtn.addEventListener('touchend', () => {
+  recordBtn.addEventListener('touchend', (e) => {
+    e.preventDefault(); // 防止默认行为
     if (recording) {
       mediaRecorder.stop();
       recording = false;
+      recordBtn.classList.remove('recording');
     }
   });
 
   navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    console.log("麦克风权限获取成功，音频流已建立");
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-    mediaRecorder.onstop = () => handleBlob(new Blob(audioChunks, { type: 'audio/webm' }));
+    mediaRecorder.onstop = () => {
+      console.log("录音停止，开始处理音频数据");
+      handleBlob(new Blob(audioChunks, { type: 'audio/webm' }));
+    };
+    mediaRecorder.onerror = (e) => {
+      console.error("MediaRecorder 错误:", e);
+    };
 
     // === VAD 自动录音功能 ===
-    if (!/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
-      let vadCtx, vadStream, vadSrc, vadAnalyser, vadData;
-      let vadRecorder;
-      let isSpeaking = false;
-      let silenceStart = null;
+    let vadCtx, vadStream, vadSrc, vadAnalyser, vadData;
+    let vadRecorder;
+    let isSpeaking = false;
+    let silenceStart = null;
 
-      toggleModeBtn.onclick = () => {
-        if (mode === 'manual') {
-          mode = 'vad';
-          modeStatus.textContent = '当前模式：自动识别';
-          toggleModeBtn.textContent = '切换到手动录音模式';
-          vadStream = stream;
-          vadCtx = new AudioContext();
-          vadSrc = vadCtx.createMediaStreamSource(stream);
-          vadAnalyser = vadCtx.createAnalyser();
-          vadAnalyser.fftSize = 512;
-          vadData = new Uint8Array(vadAnalyser.fftSize);
-          vadSrc.connect(vadAnalyser);
-          vadRecorder = new MediaRecorder(stream);
-          vadRecorder.ondataavailable = e => audioChunks.push(e.data);
-          vadRecorder.onstop = () => handleBlob(new Blob(audioChunks, { type: 'audio/webm' }));
+    toggleModeBtn.onclick = () => {
+      if (mode === 'manual') {
+        mode = 'vad';
+        modeStatus.textContent = '当前模式：自动识别';
+        toggleModeBtn.textContent = '切换到手动录音模式';
+        vadStream = stream;
+        vadCtx = new AudioContext();
+        vadSrc = vadCtx.createMediaStreamSource(stream);
+        vadAnalyser = vadCtx.createAnalyser();
+        vadAnalyser.fftSize = 512;
+        vadData = new Uint8Array(vadAnalyser.fftSize);
+        vadSrc.connect(vadAnalyser);
+        vadRecorder = new MediaRecorder(stream);
+        vadRecorder.ondataavailable = e => audioChunks.push(e.data);
+        vadRecorder.onstop = () => handleBlob(new Blob(audioChunks, { type: 'audio/webm' }));
 
-          function monitor() {
-            vadAnalyser.getByteTimeDomainData(vadData);
-            let sum = 0;
-            for (let i = 0; i < vadData.length; i++) {
-              const val = (vadData[i] - 128) / 128;
-              sum += val * val;
-            }
-            const volume = Math.sqrt(sum / vadData.length);
-            const now = Date.now();
-            if (volume > 0.02 && !isSpeaking) {
-              isSpeaking = true;
-              silenceStart = null;
-              audioChunks = [];
-              vadRecorder.start();
-            } else if (volume < 0.01 && isSpeaking && vadRecorder.state === 'recording') {
-              if (!silenceStart) silenceStart = now;
-              if (now - silenceStart > 500) {
-                isSpeaking = false;
-                vadRecorder.stop();
-              }
-            } else {
-              silenceStart = null;
-            }
-            if (mode === 'vad') requestAnimationFrame(monitor);
+        function monitor() {
+          vadAnalyser.getByteTimeDomainData(vadData);
+          let sum = 0;
+          for (let i = 0; i < vadData.length; i++) {
+            const val = (vadData[i] - 128) / 128;
+            sum += val * val;
           }
-          monitor();
-        } else {
-          mode = 'manual';
-          modeStatus.textContent = '当前模式：手动录音';
-          toggleModeBtn.textContent = '切换到自动识别模式';
+          const volume = Math.sqrt(sum / vadData.length);
+          const now = Date.now();
+          if (volume > 0.02 && !isSpeaking) {
+            isSpeaking = true;
+            silenceStart = null;
+            audioChunks = [];
+            vadRecorder.start();
+            recordBtn.classList.add('recording');
+          } else if (volume < 0.01 && isSpeaking && vadRecorder.state === 'recording') {
+            if (!silenceStart) silenceStart = now;
+            if (now - silenceStart > 500) {
+              isSpeaking = false;
+              vadRecorder.stop();
+              recordBtn.classList.remove('recording');
+            }
+          } else {
+            silenceStart = null;
+          }
+          if (mode === 'vad') requestAnimationFrame(monitor);
         }
-      };
-    }
+        monitor();
+      } else {
+        mode = 'manual';
+        modeStatus.textContent = '当前模式：手动录音';
+        toggleModeBtn.textContent = '切换到自动识别模式';
+        if (isSpeaking) {
+          isSpeaking = false;
+          vadRecorder.stop();
+          recordBtn.classList.remove('recording');
+        }
+      }
+    };
   });
 
   // ===== 新增：用于发送隐藏事件的辅助函数 =====
