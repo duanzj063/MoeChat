@@ -39,6 +39,7 @@ class Agent:
 
          # 载入提示词
         self.prompt = []
+        self.prompt = ''''''
         # self.prompt.append({"role": "system", "content": f"当前系统时间：{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))}"})
         # tt = '''6. 注意输出文字的时候，将口语内容使用""符号包裹起来，并且优先输出口语内容，其他文字使用()符号包裹。'''
         self.long_mem_prompt = prompt.long_mem_prompt
@@ -47,23 +48,25 @@ class Agent:
         if self.char_settings:
             self.system_prompt = prompt.system_prompt.replace("{{char}}", self.char).replace("{{user}}", self.user)
             self.char_setting_prompt = prompt.char_setting_prompt.replace("{{char_setting_prompt}}", self.char_settings).replace("{{char}}", self.char).replace("{{user}}", self.user)
-            self.prompt.append({"role": "system", "content": self.system_prompt})
-            self.prompt.append({"role": "system", "content": self.char_setting_prompt})
+            # self.prompt.append({"role": "system", "content": self.system_prompt})
+            # self.prompt.append({"role": "system", "content": self.char_setting_prompt})
+            self.prompt += self.system_prompt + "\n\n"
+            self.prompt += self.char_setting_prompt + "\n\n"
         if self.char_personalities:
             self.char_Personalities_prompt = prompt.char_Personalities_prompt.replace("{{char_Personalities_prompt}}", self.char_personalities).replace("{{char}}", self.char).replace("{{user}}", self.user)
-            self.prompt.append({"role": "system", "content": self.char_Personalities_prompt})
-            # self.prompt += self.char_Personalities_prompt + "\n\n"
+            # self.prompt.append({"role": "system", "content": self.char_Personalities_prompt})
+            self.prompt += self.char_Personalities_prompt + "\n\n"
         if self.mask:
             self.mask_prompt = prompt.mask_prompt.replace("{{mask_prompt}}", self.mask).replace("{{char}}", self.char).replace("{{user}}", self.user)
-            self.prompt.append({"role": "system", "content": self.mask_prompt})
-            # self.prompt += self.mask_prompt + "\n\n"
+            # self.prompt.append({"role": "system", "content": self.mask_prompt})
+            self.prompt += self.mask_prompt + "\n\n"
         if self.message_example:
             self.message_example_prompt = prompt.message_example_prompt.replace("{{message_example}}", self.message_example).replace("{{user}}", self.user).replace("{{char}}", self.char)
-            self.prompt.append({"role": "system", "content": self.message_example_prompt})
-            # self.prompt += self.message_example_prompt + "\n\n"
+            # self.prompt.append({"role": "system", "content": self.message_example_prompt})
+            self.prompt += self.message_example_prompt + "\n\n"
         if CConfig.config["Agent"]["prompt"]:
-            self.prompt.append({"role":  "system", "content": CConfig.config["Agent"]["prompt"]})
-            # self.prompt += config["prompt"]
+            # self.prompt.append({"role":  "system", "content": CConfig.config["Agent"]["prompt"]})
+            self.prompt += CConfig.config["Agent"]["prompt"] + "\n\n"
 
     def __init__(self):
         self.lock = Lock()
@@ -186,6 +189,7 @@ class Agent:
                 self.Core_mem.add_memory(mem_list)
         except:
             return
+        
     # 获取发送到大模型的上下文
     def get_msg_data(self, msg: str) -> list:
         # index = len(self.msg_data) - 1
@@ -231,17 +235,28 @@ class Agent:
             tt.join()
         
         # 合并上下文、世界书、记忆信息
+        tmp_msg = ''''''
         if self.is_data_base and data_base:
             # self.msg_data.append({"role": "system", "content": self.data_base_prompt.replace("{{data_base}}", data_base[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
-            self.msg_data_tmp.append({"role": "system", "content": self.data_base_prompt.replace("{{data_base}}", data_base[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
+            # self.msg_data_tmp.append({"role": "system", "content": self.data_base_prompt.replace("{{data_base}}", data_base[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
+            tmp_msg += self.data_base_prompt.replace("{{data_base}}", data_base[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)
         if self.is_core_mem and core_mem:
             # self.msg_data.append({"role": "system", "content": self.core_mem_prompt.replace("{{core_mem}}", core_mem[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
-            self.msg_data_tmp.append({"role": "system", "content": self.core_mem_prompt.replace("{{core_mem}}", core_mem[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
+            # self.msg_data_tmp.append({"role": "system", "content": self.core_mem_prompt.replace("{{core_mem}}", core_mem[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
+            tmp_msg += self.core_mem_prompt.replace("{{core_mem}}", core_mem[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)
         if self.is_long_mem and mem_msg:
             # self.msg_data.append({"role": "system", "content": self.long_mem_prompt.replace("{{memories}}", mem_msg[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
-            self.msg_data_tmp.append({"role": "system", "content": self.long_mem_prompt.replace("{{memories}}", mem_msg[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
-        self.msg_data_tmp.append({"role": "system", "content": f"当前现实世界时间：{t_n}；一定要基于现实世界时间做出适宜的回复。"})
+            # self.msg_data_tmp.append({"role": "system", "content": self.long_mem_prompt.replace("{{memories}}", mem_msg[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)})
+            tmp_msg += self.long_mem_prompt.replace("{{memories}}", mem_msg[0]).replace("{{user}}", self.user).replace("{{char}}", self.char)
+        # self.msg_data_tmp.append({"role": "system", "content": f"当前现实世界时间：{t_n}；一定要基于现实世界时间做出适宜的回复。"})
+
         # 合并上下文、世界书、记忆信息
+        tmp_msg += f'''
+<当前时间>{t_n}</当前时间>
+<用户对话内容或动作>
+{msg}
+</用户对话内容或动作>
+'''
         self.msg_data_tmp.append(
             {
                 "role": "user",
