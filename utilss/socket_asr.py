@@ -55,14 +55,13 @@ def handle_client(client_socket: socket, asr_model: AutoModel):
     # 发送欢迎消息
     while True:
         # 接收完整消息
-        try:
-            data = rec(client_socket)
-        except:
+        data = rec(client_socket)
+            
+        if data is None:
             client_socket.close()
             Log.logger.info(f"客户端断开：{client_socket}")
             return
-        if data is None:
-            break
+        
         # print(f"[客户端 {client_address}] {message}")
         data = json.loads(data)
         if data["type"] == "asr":
