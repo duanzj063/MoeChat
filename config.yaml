@@ -23,7 +23,7 @@ GSV:
   text_lang: zh
   GPT_weight: ""
   SoVITS_weight: ""
-  ref_audio_path: "姬子.mp3"
+  ref_audio_path: "d:/code/pythonWork/MoeChat/姬子.mp3"
   prompt_text: "我在星空之中遨游，他在知识之海遨游，我们交汇的机会不多，但都在开拓未知的边界。"
   prompt_lang: zh
   aux_ref_audio_paths:        # 多参考音频 v2模型有效
