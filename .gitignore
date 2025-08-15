@@ -4,3 +4,6 @@ __pycache__
 utilss/models
 data/agents
 server.log
+live2d_frontend/
+GPT-SoVITS-v2pro-20250604-nvidia50
+test_output/

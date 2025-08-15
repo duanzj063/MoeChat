@@ -206,12 +206,29 @@ def to_llm(msg: list, res_msg_list: list, full_msg: list):
     res_msg_list.append("DONE_DONE")
 
 def tts(datas: dict):
-    res = requests.post(CConfig.config["GSV"]["api"], json=datas, timeout=10)
-    if res.status_code == 200:
-        return res.content
-    else:
-        print(f"[错误]tts语音合成失败！！！")
-        print(datas)
+    try:
+        res = requests.post(CConfig.config["GSV"]["api"], json=datas, timeout=10)
+        if res.status_code == 200:
+            return res.content
+        else:
+            print(f"[错误]TTS API返回错误状态码: {res.status_code}")
+            print(f"[错误]响应内容: {res.text}")
+            print(f"[错误]请求数据: {datas}")
+            return None
+    except requests.exceptions.ConnectionError as e:
+        print(f"[错误]无法连接到TTS服务器 {CConfig.config['GSV']['api']}")
+        print(f"[错误]连接错误详情: {str(e)}")
+        print(f"[提示]请检查TTS服务器是否正在运行，IP地址和端口是否正确")
+        return None
+    except requests.exceptions.Timeout as e:
+        print(f"[错误]TTS请求超时 (10秒)")
+        print(f"[错误]超时详情: {str(e)}")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"[错误]TTS请求发生异常: {str(e)}")
+        return None
+    except Exception as e:
+        print(f"[错误]TTS函数发生未知错误: {str(e)}")
         return None
     
 
