@@ -20,7 +20,7 @@ def get_msg_box(msg: str):
         content=ft.Text(msg, size=20, text_align=ft.TextAlign.CENTER),
         padding=5,
         border_radius=10,
-        bgcolor=ft.colors.BLUE_900,
+        bgcolor=ft.Colors.BLUE_900,
     )
 
 def main(page: ft.Page):

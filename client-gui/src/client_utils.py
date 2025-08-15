@@ -45,7 +45,7 @@ data = {
 def add_msg(str_msg: str):
     # global ui.chat_list
     global ai_name
-    if ui.chat_list.controls[-1].data != ai_name:
+    if len(ui.chat_list.controls) == 0 or ui.chat_list.controls[-1].data != ai_name:
         msg = ui.ChatMessage(ai_name, "", "left")
         msg.msg_list.controls.append(ui.get_msg_box(str_msg))
         ui.chat_list.controls.append(msg.cont)
