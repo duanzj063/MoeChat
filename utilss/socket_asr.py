@@ -66,20 +66,15 @@ def handle_client(client_socket: socket, asr_model: AutoModel):
     
     # 循环接收客户端数据
     while True:
-        try:
-            # 接收完整消息
-            data = rec(client_socket)
-        except:
-            # 如果接收失败，关闭客户端连接并返回
+        # 接收完整消息
+        data = rec(client_socket)
+            
+        if data is None:
             client_socket.close()
             Log.logger.info(f"客户端断开：{client_socket}")
             return
-            
-        # 如果没有接收到数据，退出循环
-        if data is None:
-            break
-            
-        # 解析JSON数据
+        
+        # print(f"[客户端 {client_address}] {message}")
         data = json.loads(data)
         
         # 如果消息类型是语音识别(asr)

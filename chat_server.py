@@ -333,6 +333,9 @@ def tts(datas: dict):
         return None
 
 def clear_text(msg: str):
+    # 过滤表情动作描述（*动作*格式）
+    msg = re.sub(r'\*[^*]*\*', '', msg)
+    # 过滤括号内容
     msg = re.sub(r'[$(（[].*?[]）)]', '', msg)
     msg = msg.replace(" ", "").replace("\n", "")
     tmp_msg = ""

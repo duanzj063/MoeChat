@@ -233,7 +233,10 @@ def tts(datas: dict):
     
 
 def clear_text(msg: str):
+    # 过滤表情动作描述（*动作*格式）
+    msg = re.sub(r'\*[^*]*\*', '', msg)
     msg = re.sub(r'\{(image|meme|pics):.*?\}', '', msg) # 新增：移除所有image和meme标签
+    # 过滤括号内容
     msg = re.sub(r'[$(（[].*?[]）)]', '', msg)
     msg = msg.replace(" ", "").replace("\n", "")
     tmp_msg = ""
