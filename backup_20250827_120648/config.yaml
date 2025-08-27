@@ -1,0 +1,137 @@
+Core:
+  tt: false
+  sv:
+    is_up: false
+    master_audio: test.wav    # 包含你声音的wav音频文件，建议3s-5s左右。
+    thr:                      # 阈值，越小越敏感，建议0.5-0.8之间，实测好像不是很有用？
+ASR:
+  use_remote: false          # 是否使用远程ASR服务
+  remote_api: ""            # 远程ASR API地址
+  api_key: ""               # 远程ASR API密钥
+  model: ""                 # 远程ASR模型名称
+  language: "zh"           # 语言设置
+  local_model_path: "./utilss/models/SenseVoiceSmall"  # 本地模型路径
+  device: "cuda:0"          # 设备设置
+LLM:
+  api: "http://27.159.93.61:7866/v1/chat/completions"
+  key: "1"
+  model: "Qwen3-30B-A3B-Instruct-2507-FP8"
+  extra_config:               # 大模型API额外参数，如：temperature: 0.7，温度参数
+
+GSV:
+  api: "http://127.0.0.1:9880/tts"
+  text_lang: zh
+  GPT_weight: ""
+  SoVITS_weight: ""
+  ref_audio_path: "d:/code/pythonWork/MoeChat/姬子.mp3"
+  prompt_text: "我在星空之中遨游，他在知识之海遨游，我们交汇的机会不多，但都在开拓未知的边界。"
+  prompt_lang: zh
+  aux_ref_audio_paths:        # 多参考音频 v2模型有效
+    - 
+  seed: -1
+  top_k: 15
+  batch_size: 20
+  ex_config:
+    text_split_method: cut0
+extra_ref_audio:              # 使用情绪标签选择参考音频，例如 [普通]"你好呀。"
+  # 实例
+  # 普通: 
+  #   - 参考音频路径
+  #   - 参考音频文本
+Agent:
+  is_up: true                 # 是否启用角色模板功能，如果不启动则和旧版一样只有常规语音对话功能，启用可以基于模板创建个性化角色
+  char: 姬子                # 角色的名称，会写入到提示词内
+  user: 寂寞的熊猫               # 用户名称，会写入到提示词内
+  long_memory: true           # 是否启用日记功能，日记功能可以长期储存对话信息，并根据用户输入的时间信息进行检索；比如：“昨天做了什么？”、“两天前吃的午饭是什么？”
+  is_check_memorys: true      # 启用日记检索加强，使用嵌入模型对检索到的信息做提取，去除与用户提问不相关的内容。
+  is_core_mem: true           # 是否启用核心记忆功能，核心记忆主要储存关于用户重要信息，如：用户的住址、爱好、喜欢的东西等等。区别于日记，使用嵌入模型进行语义匹配（模糊搜索），不能根据时间检索，但记忆带有记录时间。
+  mem_thresholds: 0.38        # 日记内容搜索阈值，启用日志检索加强是需要，用于判断匹配程度。过高可能会丢失数据，过低则过滤少量无用记忆。
+  lore_books: true            # 是否启用世界书（知识库），用于给大模型添加知识，如：人物、物品、事件等等，强化ai的能力，也可用于强化角色扮演。
+  books_thresholds: 0.5       # 知识库检索阈值。
+  scan_depth: 4               # 知识库搜索深度，返回知识的数量，但相似度低于检索阈值的知识不会被返回，所以返回结果数量也可能小于设定的数值。
+
+  mood_system_enabled: true   # 设置为 false 可以完全禁用情绪系统
+  mood_persists: false         # 设置为 true，重启后会读取上次的情绪值；false则每次重置为0
+  mood_functions:
+    positive_impact: "1 + log(3 * pi * x) + 0.8 * sqrt(x)"
+    negative_impact: "(sqrt(pi) * x) / (1 + exp(sqrt(e) * 0.8 * (sqrt(pi) - x))) + sqrt(e)"
+  
+  # 上下文长度，决定系统会保存多少条上下文，填入0则保存所有上下文。
+  context_length: 0
+
+  # 下面提示词都可以用{{user}}、{{char}}占位符来代表用户名和角色名。
+  
+  # 角色的基本设定，会组合到角色设定提示词中，建议不要添加多余的信息，不填则不会添加到提示词。
+  char_settings: "姬子是星穹列车的现任领航员，充满冒险精神的科学家。她有着红色的长发和金色的瞳孔，身材高挑，具有成熟女性的魅力。她身穿黑色的外套，常常半脱着，内搭白色衬衫，下身是黑色短裙配黑色丝袜和高跟鞋，手戴黑色手套，胸前有一颗痣，整体形象优雅而知性。姬子少女时代在故乡遭遇了搁浅的星穹列车，经过多年努力修复列车后，开始了在宇宙中开拓新世界的旅程。她性格温和而坚定，富有责任感和领导力，对同伴关怀备至，在关键时刻总能做出正确的判断。她热爱咖啡，经常为列车组成员泡咖啡，虽然手艺不佳但充满热情。她精通星际航行动力学和各种科学知识，擅长修理和改造机械设备，拥有强大的战斗能力和火属性的力量。作为列车的大姐姐，她既是导师也是朋友，总是以温暖的笑容迎接每一次冒险，用她的智慧和勇气指引着开拓者们前进。她常说'好啦，打起精神来，这就是我们要开拓的新世界！'，体现了她乐观积极的人生态度。"
+  
+  # 角色性格提设定，会组合到角色性格提示词中，建议不要添加多余的信息，不填则不会添加到提示词。
+  char_personalities: "温和而坚定，富有责任感和领导力，对同伴关怀备至。性格乐观积极，充满冒险精神，在困难面前从不退缩。作为成熟的大姐姐，既温柔体贴又可靠值得信赖，总是能在关键时刻给予正确的指导和温暖的支持。"
+  
+  # 关于用户自身的设定，可以填入你的性格喜好，或者你跟角色的关系。内容填充到提示词模板中，建议不要填不相关的信息。没有可不填。
+  mask: ""
+  
+  # 对话示例，用于强化AI的文风。内容填充到提示词模板中，不要填入其他信息，没有可不填。
+  message_example: |-
+    好啦，打起精神来，这就是我们要开拓的新世界！来，我给你泡杯咖啡吧，虽然大家都说我的咖啡很浓，但这可是我的拿手好戏呢。
+
+  # 自定义提示词，不基于模板，可自定义填写，如果不想使用提示词模板创建角色，可以只填这一项。也可以不填。
+  prompt: |-
+    使用口语的文字风格进行对话，不要太啰嗦。
+
+  # 开场白，数组形式。用于创建开场内容，填入用户与AI的对话内容，只能填入用户和Ai的对话内容，开场白会直接被插入到上下文的开头。
+  start_with:
+
+# 天气查询功能配置
+HeWeather:
+  Is_on: true                 # 是否启用天气查询功能
+
+# 网络图片搜索功能配置
+get_image:
+  enabled: true               # 是否启用网络图片搜索功能
+
+# 表情包功能配置
+Memes:
+  turn_on: true               # 是否启用表情包功能
+
+# 本地图片分享功能配置
+Pics:
+  turn_on: true               # 是否启用本地图片分享功能
+
+# 远程Embedding模型配置
+Embedding:
+  remote_enabled: true             # 启用远程Embedding模型
+  base_url: "http://27.159.93.61:9997"  # Xinference服务地址
+  model_name: "Qwen3-Embedding-8B" # 模型名称
+  api_key: "1"                     # API密钥
+  timeout: 30                      # 请求超时时间（秒）
+  max_retries: 3                   # 最大重试次数
+  batch_size: 32                   # 批量处理大小
+  
+  # 本地模型配置（作为备用）
+  local:
+    model_path: "nlp_gte_sentence-embedding_chinese-base"  # 本地模型路径
+    fallback_enabled: true         # 启用本地模型作为备用
+
+# PostgreSQL向量库配置
+PostgreSQL:
+  enabled: true                # 启用PostgreSQL向量库
+  host: "27.159.93.61"        # PostgreSQL服务器地址
+  port: 5432                   # PostgreSQL端口
+  database: "moechat"         # 数据库名称
+  user: "root"                # 数据库用户名
+  password: "Fsti<#>2025"     # 数据库密码
+  connect_timeout: 10          # 连接超时时间（秒）
+  
+  # 向量库表配置
+  tables:
+    core_memory: "moechat_core_memory"     # 核心记忆表名
+    long_memory: "moechat_long_memory"     # 长期记忆表名
+    knowledge_base: "moechat_knowledge"    # 知识库表名
+  
+  # 向量搜索配置
+  vector_config:
+    dimension: 4096            # 向量维度（Qwen3-Embedding-8B输出4096维）
+    index_type: "ivfflat"     # 索引类型：ivfflat 或 hnsw
+    lists: 100                # IVFFlat索引的列表数量
+    ef_construction: 64       # HNSW索引构建参数
+    ef_search: 40             # HNSW索引搜索参数

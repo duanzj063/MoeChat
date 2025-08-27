@@ -16,7 +16,8 @@ import pickle
 import numpy as np
 import faiss
 from utilss import embedding
-from utilss import config as CConfig, log as Log    
+from utilss import config as CConfig, log as Log
+from utilss.vector_store import VectorStoreFactory
 
 # 设置环境变量，避免KMP库重复加载警告
 os.environ["KMP_DUPLICATE_LIB_OK"]= "TRUE"
@@ -72,15 +73,18 @@ class DataBase:
         
         从配置文件中读取以下参数：
         - books_thresholds: 相似度阈值
-        - scan_depth: 查询深度（返回结果数量）
+        - books_top_k: 查询深度（返回结果数量）
         - char: 角色名称，用于确定数据库路径
         
         功能说明：
             - 每次初始化时从配置文件读取最新设置
             - 根据角色名称确定数据库存储路径
         """
-        self.thresholds = float(CConfig.config["Agent"]["books_thresholds"])
-        self.top_k = int(CConfig.config["Agent"]["scan_depth"])
+        # 优先从根级别配置读取，如果没有则从Agent配置读取
+        self.thresholds = float(CConfig.config.get("books_thresholds", 
+                                                  CConfig.config.get("Agent", {}).get("books_thresholds", 0.3)))
+        self.top_k = int(CConfig.config.get("books_top_k", 
+                                           CConfig.config.get("Agent", {}).get("scan_depth", 5)))
         char = CConfig.config["Agent"]["char"]
         self.path = f"./data/agents/{char}/data_base"
 
@@ -90,26 +94,28 @@ class DataBase:
         
         初始化流程：
         1. 更新配置信息
-        2. 创建必要的目录结构
-        3. 加载已处理的文件列表（基于MD5值）
-        4. 检测新文件或已修改的文件
-        5. 向化新文件内容并保存缓存
-        6. 加载所有向量数据
-        7. 构建FAISS索引
+        2. 初始化向量存储（本地FAISS或远程PostgreSQL）
+        3. 初始化embedding模型
+        4. 加载已处理的文件列表（基于MD5值）
+        5. 检测新文件或已修改的文件
+        6. 向量化新文件内容并存储
+        7. 构建或更新向量索引
         
         功能说明：
+            - 支持本地FAISS和远程PostgreSQL两种存储模式
             - 支持增量更新，只处理新增或修改的文件
             - 使用MD5哈希值检测文件变化
-            - 向量化后的数据以pickle格式缓存，提高性能
-            - 自动处理空数据库情况，提供默认填充数据
+            - 自动处理空数据库情况
         """
         self.update_config()
-        # self.vects = np.array([])
         self.databases = []
-        # self.thresholds = thresholds
-        # self.top_k = top_k
-
-        # self.path = f"./data/agents/{char}/data_base"
+        
+        # 初始化向量存储
+        self._init_vector_store()
+        
+        # 初始化embedding模型
+        self._init_embedding_model()
+        
         # 创建临时标签目录，用于存储向量化后的缓存文件
         os.makedirs(self.path+"/tmp/labels", exist_ok=True)
 
@@ -136,7 +142,7 @@ class DataBase:
                     books.append(file)
                     books_path.append(file_path)
         
-        # 向量化新增或修改的世界书内容，并保存缓存文件
+        # 向量化新增或修改的世界书内容
         for index in range(len(books)):
             with open(books_path[index], "r", encoding="utf-8") as f:
                 datas = yaml.safe_load(f)
@@ -146,15 +152,29 @@ class DataBase:
                     for data in datas:
                         tmp1.append(data)
                         tmp2.append(datas[data])
+                    
                     # 将文本转换为向量
-                    vect_list = embedding.t2vect(tmp1)
-                    # 准备要缓存的数据
-                    res_data = {"vect": vect_list, "text": tmp2}
-                    pick_data = pickle.dumps(res_data)
-                    # 保存缓存文件
-                    with open(f"{self.path}/tmp/labels/{books[index]}.pkl", "wb") as f2:
-                        f2.write(pick_data)
-                    Log.logger.info(f"成功向量化【{books[index]}】世界书，共加载{len(tmp1)}条数据。")
+                    if self.embedding_model:
+                        vect_list = self.embedding_model.encode(tmp1)
+                    else:
+                        vect_list = embedding.t2vect(tmp1)
+                    
+                    # 根据存储模式处理数据
+                    if self.use_remote_store:
+                        # 远程存储：直接添加到向量库
+                        ids = self.vector_store.add_vectors(
+                            vect_list, tmp2, 
+                            [{"source": books[index], "type": "lore_book"} for _ in tmp2]
+                        )
+                        Log.logger.info(f"成功向量化并存储【{books[index]}】世界书到远程数据库，共加载{len(tmp1)}条数据。")
+                    else:
+                        # 本地存储：保存缓存文件
+                        res_data = {"vect": vect_list, "text": tmp2}
+                        pick_data = pickle.dumps(res_data)
+                        with open(f"{self.path}/tmp/labels/{books[index]}.pkl", "wb") as f2:
+                            f2.write(pick_data)
+                        Log.logger.info(f"成功向量化【{books[index]}】世界书，共加载{len(tmp1)}条数据。")
+                    
                     # 更新文件MD5值
                     base_list[books[index]] = sum_md5(books_path[index])
                 except Exception as e:
@@ -162,9 +182,60 @@ class DataBase:
                     # 即使出错也更新MD5值，避免重复尝试
                     base_list[books[index]] = sum_md5(books_path[index])
         
-        # 加载所有向量数据，建立数据库、索引，并保存更新后的总表内容
+        # 根据存储模式初始化索引
+        if self.use_remote_store:
+            # 远程存储：不需要本地索引
+            Log.logger.info(f"使用远程PostgreSQL向量存储，当前向量数量: {self.vector_store.get_vector_count()}")
+        else:
+            # 本地存储：加载所有向量数据并建立FAISS索引
+            self._load_local_data()
+            
+        # 保存更新后的文件列表
+        with open( f"{self.path}/tmp/label.yaml", "w") as f:
+             yaml.safe_dump(base_list, f)
+    
+    def _init_vector_store(self):
+        """初始化向量存储"""
+        try:
+            # 获取向量存储配置
+            vector_config = CConfig.config.get('VectorStore', {})
+            
+            # 创建向量存储实例
+            table_name = f"lore_books_{CConfig.config['Agent']['char']}"
+            self.vector_store = VectorStoreFactory.create_vector_store(vector_config, table_name)
+            
+            # 判断是否使用远程存储
+            self.use_remote_store = vector_config.get('mode', 'local') == 'remote'
+            
+            Log.logger.info(f"向量存储初始化成功: {vector_config.get('mode', 'local')}模式")
+            
+        except Exception as e:
+            Log.logger.error(f"向量存储初始化失败: {e}，回退到本地FAISS模式")
+            self.use_remote_store = False
+            self.vector_store = None
+    
+    def _init_embedding_model(self):
+        """初始化embedding模型"""
+        try:
+            from utilss.vector_store import EmbeddingFactory
+            
+            # 获取embedding配置
+            embedding_config = CConfig.config.get('Embedding', {})
+            
+            # 创建embedding模型实例
+            self.embedding_model = EmbeddingFactory.create_embedding_model(embedding_config)
+            
+            Log.logger.info(f"Embedding模型初始化成功: {embedding_config.get('mode', 'local')}模式")
+            
+        except Exception as e:
+            Log.logger.error(f"Embedding模型初始化失败: {e}，使用默认模型")
+            self.embedding_model = None
+    
+    def _load_local_data(self):
+        """加载本地FAISS数据"""
         file_list = os.listdir(f"{self.path}/tmp/labels")
         tmp_list = []
+        
         for file in file_list:
             if not os.path.isfile( f"{self.path}/tmp/labels/{file}"):
                 continue
@@ -174,10 +245,6 @@ class DataBase:
             self.databases += tmp_data["text"]
             Log.logger.info(f"成功加载【{file}】世界书，共加载{len(tmp_data['vect'])}条数据。")
             
-        # 保存更新后的文件列表
-        with open( f"{self.path}/tmp/label.yaml", "w") as f:
-             yaml.safe_dump(base_list, f)
-             
         # 合并所有向量数据
         if len(tmp_list) > 0:
             self.vects = np.concatenate(tmp_list)
@@ -206,21 +273,73 @@ class DataBase:
             
         功能说明：
             - 将查询文本转换为向量
-            - 使用FAISS索引进行相似度搜索
+            - 根据存储模式使用不同的搜索方法
             - 根据相似度阈值过滤结果
             - 返回符合条件的内容，每条内容之间用两个换行符分隔
         """
-        # 储存返回结果
-        msg = ""
-        # 向量化查询内容
-        vect = embedding.t2vect(text)
-        # 查询：返回top_k个最相似的结果
-        # D: 相似度分数数组, I: 对应的索引数组
-        D, I = self.index.search(vect, self.top_k)
-        # 处理查询结果
-        for index in range(len(D)):
-            for i2 in range(len(D[index])):
-                # 如果相似度分数大于等于阈值，则添加到结果中
-                if D[index][i2] >= self.thresholds:
-                    msg += self.databases[I[index][i2]] + "\n\n"
-        return msg
+        try:
+            if self.use_remote_store and self.vector_store:
+                # 远程存储：使用向量库的搜索接口
+                msg = ""
+                for query_text in text:
+                    # 向量化查询内容
+                    if self.embedding_model:
+                        query_vector = self.embedding_model.encode(query_text)
+                    else:
+                        query_vector = embedding.t2vect(query_text)
+                    
+                    # 执行向量搜索
+                    results = self.vector_store.search(
+                        query_vector, 
+                        top_k=self.top_k, 
+                        threshold=self.thresholds
+                    )
+                    
+                    # 处理搜索结果
+                    for _, similarity, content in results:
+                        msg += content + "\n\n"
+                
+                return msg
+            else:
+                # 本地存储：使用FAISS索引
+                msg = ""
+                # 检查是否有有效的索引和数据
+                if not hasattr(self, 'index') or self.index is None:
+                    Log.logger.error("FAISS索引未初始化")
+                    return ""
+                
+                if not hasattr(self, 'databases') or len(self.databases) == 0:
+                    Log.logger.error("数据库内容为空")
+                    return ""
+                
+                # 向量化查询内容
+                if self.embedding_model:
+                    vect = self.embedding_model.encode(text)
+                else:
+                    vect = embedding.t2vect(text)
+                    
+                if vect is None or len(vect) == 0:
+                    Log.logger.error("查询文本向量化失败")
+                    return ""
+                
+                # 查询：返回top_k个最相似的结果
+                # D: 相似度分数数组, I: 对应的索引数组
+                D, I = self.index.search(vect, self.top_k)
+                
+                # 处理查询结果
+                for index in range(len(D)):
+                    for i2 in range(len(D[index])):
+                        # 如果相似度分数大于等于阈值，则添加到结果中
+                        if D[index][i2] >= self.thresholds:
+                            msg += self.databases[I[index][i2]] + "\n\n"
+                
+                if not msg.strip():
+                    Log.logger.warning(f"未找到满足阈值({self.thresholds})的搜索结果")
+                
+                return msg
+                
+        except Exception as e:
+            Log.logger.error(f"知识库搜索失败: {e}")
+            import traceback
+            Log.logger.error(f"详细错误信息: {traceback.format_exc()}")
+            return ""

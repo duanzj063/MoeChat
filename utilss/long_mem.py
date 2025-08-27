@@ -3,6 +3,7 @@ import yaml
 import jionlp as jio
 import time
 from utilss import embedding, prompt
+from utilss.vector_store import get_vector_store
 from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import LiteralScalarString
 import numpy as np
@@ -37,6 +38,14 @@ class Memorys:
         self.memorys_key = []       # 记录所有记忆的key，秒级整形时间戳
         self.memorys_data = {}      # 记录所有记忆的文本数据，key为时间戳
         self.vectors = []           # 记录文本tag向量，与memorys_key一一对应
+        
+        # 初始化向量库
+        try:
+            self.vector_store = get_vector_store("long_memory")
+            Log.logger.info("长期记忆向量库初始化成功")
+        except Exception as e:
+            Log.logger.error(f"长期记忆向量库初始化失败: {str(e)}")
+            self.vector_store = None
 
         # 加载记忆数据
         msg_vectors = []
@@ -83,6 +92,25 @@ class Memorys:
         
         # 记录加载结果
         Log.logger.info(f"共加载{len(self.memorys_key)}条记忆...{len(self.vectors)}条记忆向量")
+        
+        # 将现有记忆添加到向量库
+        if self.vector_store and self.memorys_key:
+            try:
+                texts = []
+                metadata = []
+                vectors = []
+                
+                for i, key in enumerate(self.memorys_key):
+                    if i < len(self.vectors):
+                        texts.append(self.memorys_data[key])
+                        metadata.append({"timestamp": key, "type": "long_memory"})
+                        vectors.append(self.vectors[i])
+                
+                if vectors:
+                    self.vector_store.add_vectors(vectors, texts, metadata)
+                    Log.logger.info(f"成功将{len(vectors)}条长期记忆添加到向量库")
+            except Exception as e:
+                Log.logger.error(f"添加长期记忆到向量库失败: {str(e)}")
 
     def find_range_indices(self, low, high) -> list:
         """
@@ -149,18 +177,44 @@ class Memorys:
         # 根据配置决定是否进行深度检索
         if self.is_check_memorys:
             Log.logger.info(f"深度检索记忆，检索阈值{self.thresholds}")
-            # 生成查询向量
-            q_v = embedding.t2vect([msg])[0]
-            tmp_msg = ""
-            # 遍历时间范围内的记忆，计算相似度
-            for index in range(res_index[0]+1, res_index[1]+1):
-                # 计算向量余弦相似度
-                rr = np.dot(self.vectors[index], q_v)
-                if rr >= self.thresholds:
-                    tmp_msg += str(self.memorys_data[self.memorys_key[index]])
-                    tmp_msg += "\n"
-            if len(tmp_msg) > 0:
-                res_msg.append(tmp_msg)
+            
+            # 使用向量库进行搜索
+            if self.vector_store:
+                try:
+                    # 在时间范围内搜索相关记忆
+                    results = self.vector_store.search_vectors(msg, top_k=10, threshold=self.thresholds)
+                    tmp_msg = ""
+                    
+                    for result in results:
+                        timestamp = result['metadata'].get('timestamp')
+                        # 检查是否在时间范围内
+                        if timestamp and time_span_list[0] <= timestamp <= time_span_list[1]:
+                            if timestamp in self.memorys_data:
+                                tmp_msg += str(self.memorys_data[timestamp]) + "\n"
+                    
+                    if tmp_msg:
+                        res_msg.append(tmp_msg)
+                except Exception as e:
+                    Log.logger.error(f"向量库搜索失败，使用本地搜索: {str(e)}")
+                    # 回退到原始方法
+                    q_v = embedding.t2vect([msg])[0]
+                    tmp_msg = ""
+                    for index in range(res_index[0]+1, res_index[1]+1):
+                        rr = np.dot(self.vectors[index], q_v)
+                        if rr >= self.thresholds:
+                            tmp_msg += str(self.memorys_data[self.memorys_key[index]]) + "\n"
+                    if tmp_msg:
+                        res_msg.append(tmp_msg)
+            else:
+                # 使用原始方法
+                q_v = embedding.t2vect([msg])[0]
+                tmp_msg = ""
+                for index in range(res_index[0]+1, res_index[1]+1):
+                    rr = np.dot(self.vectors[index], q_v)
+                    if rr >= self.thresholds:
+                        tmp_msg += str(self.memorys_data[self.memorys_key[index]]) + "\n"
+                if tmp_msg:
+                    res_msg.append(tmp_msg)
         else:
             # 直接添加时间范围内的所有记忆
             tmp_mem = ""
@@ -221,6 +275,19 @@ class Memorys:
         v_list = self.vectors[index:]
         with open(f"./data/agents/{self.char}/memorys/{file_pkl}", "wb") as f:
             pickle.dump(v_list, f)
+        
+        # 添加到向量库
+        if self.vector_store:
+            try:
+                metadata = {"timestamp": t_n, "type": "long_memory"}
+                self.vector_store.add_vectors(
+                    [tag_vector], 
+                    [m_data["msg"]], 
+                    [metadata]
+                )
+                Log.logger.info(f"成功添加长期记忆到向量库: {t_n}")
+            except Exception as e:
+                Log.logger.error(f"添加长期记忆到向量库失败: {str(e)}")
     
     def add_memory1(self, data: list, t_n: int, llm_config: dict):
         """
